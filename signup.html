@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create New Account — Hoot Miner</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel Standalone CDN -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      body {
+        background-color: #f8fafc;
+        background-image: 
+          radial-gradient(at 10% 10%, rgba(124, 58, 237, 0.1) 0px, transparent 50%),
+          radial-gradient(at 90% 20%, rgba(2, 132, 199, 0.1) 0px, transparent 50%),
+          radial-gradient(at 50% 80%, rgba(219, 39, 119, 0.08) 0px, transparent 50%);
+        background-attachment: fixed;
+        color: #0f172a;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        min-height: 100vh;
+      }
+
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow: 0 20px 40px -15px rgba(124, 58, 237, 0.15);
+      }
+
+      .gradient-text-purple {
+        background: linear-gradient(135deg, #6d28d9 0%, #d946ef 50%, #0284c7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="signup-root"></div>
+
+    <!-- Firebase SDK Modules via CDN -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyA1QeDf1E_Kb1ZC15ahw1dY8hk3J0gXopY",
+        authDomain: "thodu-65cb9.firebaseapp.com",
+        databaseURL: "https://thodu-65cb9-default-rtdb.firebaseio.com",
+        projectId: "thodu-65cb9",
+        storageBucket: "thodu-65cb9.firebasestorage.app",
+        messagingSenderId: "1070229943496",
+        appId: "1:1070229943496:web:038e2e74c463e7acefa1fd",
+        measurementId: "G-NF17LPGHWV"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const rtdb = getDatabase(app);
+
+      window.HootAuth = {
+        async registerUser(userData) {
+          localStorage.setItem("hootminer_current_user", JSON.stringify(userData));
+          
+          const localUsers = localStorage.getItem("hootminer_all_users");
+          const parsed = localUsers ? JSON.parse(localUsers) : [];
+          const idx = parsed.findIndex(u => u.contactEmail.toLowerCase() === userData.contactEmail.toLowerCase());
+          if (idx >= 0) parsed[idx] = userData;
+          else parsed.push(userData);
+          localStorage.setItem("hootminer_all_users", JSON.stringify(parsed));
+
+          try {
+            const safeKey = userData.contactEmail.replace(/[^a-zA-Z0-9]/g, "_");
+            await set(ref(rtdb, `users/${safeKey}`), userData);
+          } catch (e) {
+            console.warn("Firebase user sync:", e);
+          }
+          return userData;
+        }
+      };
+      window.dispatchEvent(new Event('HootAuthReady'));
+    </script>
+
+    <script type="text/babel">
+      const { useState } = React;
+
+      function SignUpApp() {
+        const [fullName, setFullName] = useState('');
+        const [aadharNo, setAadharNo] = useState('');
+        const [educationDegree, setEducationDegree] = useState('1st yr');
+        const [gender, setGender] = useState('Male');
+        const [contactEmail, setContactEmail] = useState('');
+        const [password, setPassword] = useState('');
+        const [error, setError] = useState('');
+        const [loading, setLoading] = useState(false);
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+          setError('');
+
+          if (!fullName.trim() || !aadharNo.trim() || !contactEmail.trim() || !password.trim()) {
+            setError('Please fill out all required fields.');
+            return;
+          }
+
+          if (aadharNo.trim().length < 12) {
+            setError('Aadhar number must be at least 12 digits.');
+            return;
+          }
+
+          setLoading(true);
+
+          const userData = {
+            fullName: fullName.trim(),
+            aadharNo: aadharNo.trim(),
+            educationDegree, // '1st yr' | '2nd yr' | '3rd yr'
+            gender, // 'Male' | 'Female'
+            contactEmail: contactEmail.trim().toLowerCase(),
+            password: password.trim(),
+            createdAt: new Date().toISOString()
+          };
+
+          try {
+            if (window.HootAuth) {
+              await window.HootAuth.registerUser(userData);
+            } else {
+              localStorage.setItem("hootminer_current_user", JSON.stringify(userData));
+            }
+
+            setTimeout(() => {
+              window.location.href = 'index.html';
+            }, 300);
+          } catch (err) {
+            setError('Failed to create account. Please try again.');
+            setLoading(false);
+          }
+        };
+
+        return (
+          <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12">
+            
+            {/* Logo Bar */}
+            <a href="index.html" className="flex items-center gap-3 mb-8 group cursor-pointer">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-500 to-sky-500 p-[1.5px] shadow-lg group-hover:scale-105 transition-all">
+                <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                </div>
+              </div>
+              <span className="font-black text-2xl tracking-tight text-slate-900">
+                Hoot <span className="gradient-text-purple">Miner</span>
+              </span>
+            </a>
+
+            {/* Signup Form Box */}
+            <div className="w-full max-w-lg glass-panel p-8 sm:p-10 rounded-3xl bg-white shadow-2xl relative overflow-hidden">
+              <div className="text-center mb-8">
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Create New Account</h1>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+                  Register once to auto-fill contest application details anytime!
+                </p>
+              </div>
+
+              {error && (
+                <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-700 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                
+                {/* Full Name */}
+                <div>
+                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="John Doe"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-purple-500 shadow-sm"
+                  />
+                </div>
+
+                {/* Adhar No */}
+                <div>
+                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                    Adhar No *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={aadharNo}
+                    onChange={(e) => setAadharNo(e.target.value)}
+                    placeholder="12-digit Adhar Number"
+                    maxLength={14}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-purple-500 shadow-sm"
+                  />
+                </div>
+
+                {/* Grid for Education degree & Gender */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  
+                  {/* Education Degree */}
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                      Education Degree *
+                    </label>
+                    <select
+                      value={educationDegree}
+                      onChange={(e) => setEducationDegree(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none cursor-pointer shadow-sm"
+                    >
+                      <option value="1st yr">1st yr</option>
+                      <option value="2nd yr">2nd yr</option>
+                      <option value="3rd yr">3rd yr</option>
+                    </select>
+                  </div>
+
+                  {/* Gender */}
+                  <div>
+                    <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                      Gender *
+                    </label>
+                    <select
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none cursor-pointer shadow-sm"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Contact Email */}
+                <div>
+                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                    Contact Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="user@example.com"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-purple-500 shadow-sm"
+                  />
+                </div>
+
+                {/* Password / Security PIN */}
+                <div>
+                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1">
+                    Account Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-purple-500 shadow-sm"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white font-extrabold text-sm shadow-xl shadow-purple-600/30 hover:shadow-purple-600/50 hover:scale-[1.01] transition-all cursor-pointer mt-6"
+                >
+                  {loading ? 'Creating Account...' : 'Complete Registration & Sign In'}
+                </button>
+              </form>
+
+              {/* Already have an account link */}
+              <div className="mt-6 text-center text-xs text-slate-500 font-medium">
+                Already registered?{' '}
+                <a href="index.html" className="font-bold text-purple-700 hover:underline">
+                  Return to Home & Login
+                </a>
+              </div>
+
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('signup-root')).render(<SignUpApp />);
+    </script>
+  </body>
+</html>
