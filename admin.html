@@ -403,56 +403,444 @@
         );
       }
 
-      // Repo Manager Component
+      // Complete Repository & Question/Answer Manager Component for Admin
       function RepoManager({ repositories, questions, onRefresh, addToast }) {
-        const [isModalOpen, setIsModalOpen] = useState(false);
+        const [isRepoModalOpen, setIsRepoModalOpen] = useState(false);
         const [editingRepo, setEditingRepo] = useState(null);
-        const [formData, setFormData] = useState({ title: '', category: 'C / C++', description: '', visibility: 'Published' });
+        const [repoFormData, setRepoFormData] = useState({ title: '', category: 'C / C++', description: '', visibility: 'Published' });
+
+        const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+        const [editingQuestion, setEditingQuestion] = useState(null);
+        const [questionFormData, setQuestionFormData] = useState({
+          repositoryId: '',
+          questionTitle: '',
+          language: 'c',
+          codeSnippet: '',
+          explanation: '',
+          displayOrder: 1
+        });
+
+        const [selectedRepoForQuestions, setSelectedRepoForQuestions] = useState(null);
+        const [deleteConfirmRepo, setDeleteConfirmRepo] = useState(null);
+        const [deleteConfirmQuestion, setDeleteConfirmQuestion] = useState(null);
+
+        // Repo CRUD
+        const handleOpenCreateRepo = () => {
+          setEditingRepo(null);
+          setRepoFormData({ title: '', category: 'C / C++', description: '', visibility: 'Published' });
+          setIsRepoModalOpen(true);
+        };
+
+        const handleOpenEditRepo = (repo) => {
+          setEditingRepo(repo);
+          setRepoFormData({
+            title: repo.title,
+            category: repo.category || 'C / C++',
+            description: repo.description || '',
+            visibility: repo.visibility || 'Published'
+          });
+          setIsRepoModalOpen(true);
+        };
 
         const handleSaveRepo = async (e) => {
           e.preventDefault();
           if (window.HootDB) {
-            await window.HootDB.saveRepository({ ...editingRepo, ...formData });
-            addToast('Repository saved successfully', 'success');
-            setIsModalOpen(false);
+            await window.HootDB.saveRepository({ ...editingRepo, ...repoFormData });
+            addToast(editingRepo ? 'Repository updated' : 'Repository created', 'success');
+            setIsRepoModalOpen(false);
+            onRefresh();
+          }
+        };
+
+        const handleDeleteRepo = async () => {
+          if (!deleteConfirmRepo) return;
+          if (window.HootDB) {
+            await window.HootDB.deleteRepository(deleteConfirmRepo.id);
+            addToast('Repository deleted', 'warning');
+            setDeleteConfirmRepo(null);
+            if (selectedRepoForQuestions && selectedRepoForQuestions.id === deleteConfirmRepo.id) {
+              setSelectedRepoForQuestions(null);
+            }
+            onRefresh();
+          }
+        };
+
+        // Question CRUD
+        const handleOpenAddQuestion = (repo) => {
+          setEditingQuestion(null);
+          const repoQuestions = questions.filter(q => q.repositoryId === repo.id);
+          setQuestionFormData({
+            repositoryId: repo.id,
+            questionTitle: '',
+            language: repo.category === 'Python' ? 'python' : repo.category === 'Java' ? 'java' : 'c',
+            codeSnippet: '// Write code solution here...\n',
+            explanation: '',
+            displayOrder: repoQuestions.length + 1
+          });
+          setIsQuestionModalOpen(true);
+        };
+
+        const handleOpenEditQuestion = (q) => {
+          setEditingQuestion(q);
+          setQuestionFormData({
+            repositoryId: q.repositoryId,
+            questionTitle: q.questionTitle,
+            language: q.language || 'c',
+            codeSnippet: q.codeSnippet || '',
+            explanation: q.explanation || '',
+            displayOrder: q.displayOrder || 1
+          });
+          setIsQuestionModalOpen(true);
+        };
+
+        const handleSaveQuestion = async (e) => {
+          e.preventDefault();
+          if (!questionFormData.repositoryId || !questionFormData.questionTitle.trim() || !questionFormData.codeSnippet.trim()) {
+            addToast('Please select a repository and enter question title & code snippet', 'error');
+            return;
+          }
+
+          if (window.HootDB) {
+            await window.HootDB.saveQuestion({ ...editingQuestion, ...questionFormData });
+            addToast(editingQuestion ? 'Question updated' : 'Question & Answer added to repository', 'success');
+            setIsQuestionModalOpen(false);
+            onRefresh();
+          }
+        };
+
+        const handleDeleteQuestion = async () => {
+          if (!deleteConfirmQuestion) return;
+          if (window.HootDB) {
+            await window.HootDB.deleteQuestion(deleteConfirmQuestion.id);
+            addToast('Question deleted', 'warning');
+            setDeleteConfirmQuestion(null);
             onRefresh();
           }
         };
 
         return (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-black text-slate-900">Repositories Collection</h3>
-              <button onClick={() => { setEditingRepo(null); setFormData({ title: '', category: 'C / C++', description: '', visibility: 'Published' }); setIsModalOpen(true); }} className="px-5 py-2.5 bg-purple-600 text-white rounded-2xl font-extrabold text-xs shadow-md">
-                + Create Repository
-              </button>
+            
+            {/* Header Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-xl font-black text-slate-900">Repositories & Q&A Manager</h3>
+                <p className="text-xs text-slate-500 font-medium">Create coding repositories and add problem statements with code solutions.</p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    if (repositories.length === 0) {
+                      addToast('Please create a repository first!', 'error');
+                      return;
+                    }
+                    handleOpenAddQuestion(repositories[0]);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-purple-100 border border-purple-300 text-purple-900 text-xs font-extrabold hover:bg-purple-200 transition-all cursor-pointer shadow-sm"
+                >
+                  <Icon name="Plus" className="w-4 h-4 text-purple-600" />
+                  <span>+ Add Question & Answer</span>
+                </button>
+
+                <button
+                  onClick={handleOpenCreateRepo}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-xs shadow-md cursor-pointer"
+                >
+                  <Icon name="Plus" className="w-4 h-4" />
+                  <span>Create Repository</span>
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {repositories.map((repo) => (
-                <div key={repo.id} className="bg-white border p-6 rounded-3xl shadow-sm">
-                  <span className="text-[11px] font-extrabold px-3 py-1 bg-purple-100 text-purple-800 rounded-xl">{repo.category}</span>
-                  <h4 className="text-base font-bold text-slate-900 mt-3 mb-1">{repo.title}</h4>
-                  <p className="text-xs text-slate-500 font-medium line-clamp-2">{repo.description}</p>
+            {/* Repositories Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {repositories.map((repo) => {
+                const repoQuestions = questions.filter(q => q.repositoryId === repo.id);
+                return (
+                  <div key={repo.id} className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between hover:border-purple-300 transition-all">
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[11px] font-extrabold px-3 py-1 bg-purple-100 text-purple-800 rounded-xl">
+                          {repo.category}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-slate-500">
+                          {repoQuestions.length} Q&A Solutions
+                        </span>
+                      </div>
+
+                      <h4 className="text-lg font-bold text-slate-900 mb-2">{repo.title}</h4>
+                      <p className="text-xs text-slate-600 font-medium line-clamp-3 leading-relaxed mb-4">{repo.description}</p>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenAddQuestion(repo)}
+                          className="flex-1 py-2 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs border border-purple-200 flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <Icon name="Plus" className="w-3.5 h-3.5" />
+                          <span>Add Q&A</span>
+                        </button>
+
+                        <button
+                          onClick={() => setSelectedRepoForQuestions(selectedRepoForQuestions && selectedRepoForQuestions.id === repo.id ? null : repo)}
+                          className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <Icon name="BookOpen" className="w-3.5 h-3.5" />
+                          <span>View ({repoQuestions.length})</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-1">
+                        <button onClick={() => handleOpenEditRepo(repo)} className="p-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100">
+                          <Icon name="Edit2" className="w-3.5 h-3.5 text-purple-600" />
+                        </button>
+                        <button onClick={() => setDeleteConfirmRepo(repo)} className="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100">
+                          <Icon name="Trash2" className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Questions List Drawer for Selected Repository */}
+            {selectedRepoForQuestions && (
+              <div className="mt-8 bg-white border border-purple-200 rounded-3xl p-6 shadow-md">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase text-purple-600">Questions & Solutions List</span>
+                    <h3 className="text-xl font-black text-slate-900">{selectedRepoForQuestions.title}</h3>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleOpenAddQuestion(selectedRepoForQuestions)}
+                      className="px-4 py-2 bg-purple-600 text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer"
+                    >
+                      + Add Question to this Repo
+                    </button>
+                    <button onClick={() => setSelectedRepoForQuestions(null)} className="text-slate-400 hover:text-slate-700">
+                      <Icon name="X" className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-              ))}
-            </div>
 
-            {isModalOpen && (
+                {questions.filter(q => q.repositoryId === selectedRepoForQuestions.id).length > 0 ? (
+                  <div className="space-y-4">
+                    {questions.filter(q => q.repositoryId === selectedRepoForQuestions.id).map((q) => (
+                      <div key={q.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-black text-purple-700 font-mono">#{q.displayOrder || 1}</span>
+                            <h4 className="text-sm font-bold text-slate-900">{q.questionTitle}</h4>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-slate-200 text-slate-700">{q.language}</span>
+                          </div>
+                          {q.explanation && <p className="text-xs text-slate-600 line-clamp-1">{q.explanation}</p>}
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={() => handleOpenEditQuestion(q)} className="p-2 rounded-xl bg-white border border-slate-200 text-purple-600 hover:bg-purple-50">
+                            <Icon name="Edit2" className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setDeleteConfirmQuestion(q)} className="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100">
+                            <Icon name="Trash2" className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-slate-500 font-medium text-xs">
+                    No questions added to this repository yet. Click "+ Add Question to this Repo" above to add your first question & answer!
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Create / Edit Repository Modal */}
+            {isRepoModalOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
                 <div className="w-full max-w-lg bg-white rounded-3xl p-6 border shadow-2xl">
-                  <h3 className="text-lg font-black mb-4">{editingRepo ? 'Edit Repo' : 'Create Repo'}</h3>
+                  <h3 className="text-lg font-black mb-4">{editingRepo ? 'Edit Repository' : 'Create New Repository'}</h3>
                   <form onSubmit={handleSaveRepo} className="space-y-4">
-                    <input type="text" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Title" className="w-full px-4 py-2 bg-slate-50 border rounded-2xl text-xs font-semibold" />
-                    <textarea required rows={3} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Description" className="w-full px-4 py-2 bg-slate-50 border rounded-2xl text-xs font-medium" />
-                    <div className="flex justify-end gap-2 pt-2">
-                      <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
-                      <button type="submit" className="px-5 py-2 bg-purple-600 text-white rounded-2xl text-xs font-extrabold">Save</button>
+                    <div>
+                      <label className="block text-xs font-bold uppercase mb-1">Repository Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={repoFormData.title}
+                        onChange={(e) => setRepoFormData({ ...repoFormData, title: e.target.value })}
+                        placeholder="e.g. C Programming Problem Set"
+                        className="w-full px-4 py-2.5 bg-slate-50 border rounded-2xl text-xs font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase mb-1">Category *</label>
+                      <select
+                        value={repoFormData.category}
+                        onChange={(e) => setRepoFormData({ ...repoFormData, category: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border rounded-2xl text-xs font-semibold"
+                      >
+                        <option value="C / C++">C / C++</option>
+                        <option value="Python">Python</option>
+                        <option value="Java">Java</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase mb-1">Description *</label>
+                      <textarea
+                        required
+                        rows={3}
+                        value={repoFormData.description}
+                        onChange={(e) => setRepoFormData({ ...repoFormData, description: e.target.value })}
+                        placeholder="Short overview of the problems in this repo..."
+                        className="w-full px-4 py-2.5 bg-slate-50 border rounded-2xl text-xs font-medium"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                      <button type="button" onClick={() => setIsRepoModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                      <button type="submit" className="px-5 py-2.5 bg-purple-600 text-white rounded-2xl text-xs font-extrabold shadow-md">Save Repository</button>
                     </div>
                   </form>
                 </div>
               </div>
             )}
+
+            {/* Create / Edit Question & Answer Modal */}
+            {isQuestionModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                <div className="w-full max-w-xl bg-white rounded-3xl p-6 border shadow-2xl max-h-[90vh] overflow-y-auto">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+                    <h3 className="text-lg font-black text-slate-900">
+                      {editingQuestion ? 'Edit Question & Solution' : 'Add New Question & Solution'}
+                    </h3>
+                    <button onClick={() => setIsQuestionModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+                      <Icon name="X" className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveQuestion} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-extrabold text-slate-700 uppercase mb-1">Select Target Repository *</label>
+                      <select
+                        required
+                        value={questionFormData.repositoryId}
+                        onChange={(e) => setQuestionFormData({ ...questionFormData, repositoryId: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none"
+                      >
+                        <option value="" disabled>-- Select a Repository --</option>
+                        {repositories.map(r => (
+                          <option key={r.id} value={r.id}>{r.title} ({r.category})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-extrabold text-slate-700 uppercase mb-1">Question / Problem Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={questionFormData.questionTitle}
+                        onChange={(e) => setQuestionFormData({ ...questionFormData, questionTitle: e.target.value })}
+                        placeholder="e.g. Program to check if a number is Prime"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-extrabold text-slate-700 uppercase mb-1">Programming Language *</label>
+                        <select
+                          value={questionFormData.language}
+                          onChange={(e) => setQuestionFormData({ ...questionFormData, language: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none"
+                        >
+                          <option value="c">C</option>
+                          <option value="cpp">C++</option>
+                          <option value="python">Python</option>
+                          <option value="java">Java</option>
+                          <option value="javascript">JavaScript</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-extrabold text-slate-700 uppercase mb-1">Display Order *</label>
+                        <input
+                          type="number"
+                          required
+                          min={1}
+                          value={questionFormData.displayOrder}
+                          onChange={(e) => setQuestionFormData({ ...questionFormData, displayOrder: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-extrabold text-slate-700 uppercase mb-1">Code Solution / Snippet *</label>
+                      <textarea
+                        required
+                        rows={6}
+                        value={questionFormData.codeSnippet}
+                        onChange={(e) => setQuestionFormData({ ...questionFormData, codeSnippet: e.target.value })}
+                        placeholder="#include <stdio.h>\n..."
+                        className="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-mono text-cyan-200 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-extrabold text-slate-700 uppercase mb-1">Explanation / Solution Steps</label>
+                      <textarea
+                        rows={3}
+                        value={questionFormData.explanation}
+                        onChange={(e) => setQuestionFormData({ ...questionFormData, explanation: e.target.value })}
+                        placeholder="Brief explanation of how the logic works..."
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium text-slate-900 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                      <button type="button" onClick={() => setIsQuestionModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                      <button type="submit" className="px-5 py-2.5 rounded-2xl bg-purple-600 text-white text-xs font-extrabold shadow-md cursor-pointer">Save Question & Answer</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Delete Confirmation Modal for Repo */}
+            {deleteConfirmRepo && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                <div className="w-full max-w-md bg-white border border-rose-200 rounded-3xl p-6">
+                  <h3 className="text-lg font-black text-slate-900 mb-2">Delete Repository?</h3>
+                  <p className="text-xs text-slate-600 mb-4 font-medium">Are you sure you want to delete "{deleteConfirmRepo.title}" and all its questions?</p>
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+                    <button onClick={() => setDeleteConfirmRepo(null)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                    <button onClick={handleDeleteRepo} className="px-5 py-2.5 rounded-2xl bg-rose-600 text-white text-xs font-extrabold">Confirm Delete</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Delete Confirmation Modal for Question */}
+            {deleteConfirmQuestion && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                <div className="w-full max-w-md bg-white border border-rose-200 rounded-3xl p-6">
+                  <h3 className="text-lg font-black text-slate-900 mb-2">Delete Question?</h3>
+                  <p className="text-xs text-slate-600 mb-4 font-medium">Are you sure you want to delete "{deleteConfirmQuestion.questionTitle}"?</p>
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+                    <button onClick={() => setDeleteConfirmQuestion(null)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                    <button onClick={handleDeleteQuestion} className="px-5 py-2.5 rounded-2xl bg-rose-600 text-white text-xs font-extrabold">Confirm Delete</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         );
       }
