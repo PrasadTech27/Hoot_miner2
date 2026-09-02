@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hoot Miner — Admin Management Portal</title>
+    <meta name="robots" content="noindex, nofollow" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel Standalone CDN -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      :root {
+        --bg-main: #f8fafc;
+        --bg-card: #ffffff;
+        --accent-purple: #7c3aed;
+        --accent-pink: #db2777;
+        --accent-cyan: #0284c7;
+      }
+
+      body {
+        background-color: #f8fafc;
+        background-image: 
+          radial-gradient(at 10% 10%, rgba(124, 58, 237, 0.08) 0px, transparent 50%),
+          radial-gradient(at 90% 20%, rgba(2, 132, 199, 0.08) 0px, transparent 50%),
+          radial-gradient(at 50% 80%, rgba(219, 39, 119, 0.06) 0px, transparent 50%);
+        background-attachment: fixed;
+        color: #0f172a;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 30px -5px rgba(124, 58, 237, 0.08);
+      }
+
+      .gradient-text-purple {
+        background: linear-gradient(135deg, #6d28d9 0%, #d946ef 50%, #0284c7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="admin-root"></div>
+
+    <!-- Firebase SDK Imports via CDN -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyA1QeDf1E_Kb1ZC15ahw1dY8hk3J0gXopY",
+        authDomain: "thodu-65cb9.firebaseapp.com",
+        databaseURL: "https://thodu-65cb9-default-rtdb.firebaseio.com",
+        projectId: "thodu-65cb9",
+        storageBucket: "thodu-65cb9.firebasestorage.app",
+        messagingSenderId: "1070229943496",
+        appId: "1:1070229943496:web:038e2e74c463e7acefa1fd",
+        measurementId: "G-NF17LPGHWV"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const rtdb = getDatabase(app);
+
+      const DEFAULT_DEMO_REPO_IDS = ['repo-c-1', 'repo-c-2', 'repo-py-1', 'repo-java-1', 'repo-java-2'];
+      const DEFAULT_DEMO_QUESTION_IDS = ['q-c-1', 'q-cpp-1', 'q-cpp-2', 'q-py-1', 'q-java-1', 'q-java-2'];
+      const LOCAL_STORAGE_REPOS_KEY = "hootminer_repos";
+      const LOCAL_STORAGE_QUESTIONS_KEY = "hootminer_questions";
+
+      window.HootDB = {
+        async seedInitialDataIfNeeded() {
+          try {
+            for (const id of DEFAULT_DEMO_REPO_IDS) {
+              await remove(ref(rtdb, `repositories/${id}`));
+            }
+            for (const qId of DEFAULT_DEMO_QUESTION_IDS) {
+              await remove(ref(rtdb, `questions_answers/${qId}`));
+            }
+            const localRepos = localStorage.getItem(LOCAL_STORAGE_REPOS_KEY);
+            if (localRepos) {
+              const parsed = JSON.parse(localRepos).filter(r => !DEFAULT_DEMO_REPO_IDS.includes(r.id));
+              localStorage.setItem(LOCAL_STORAGE_REPOS_KEY, JSON.stringify(parsed));
+            }
+            const localQuestions = localStorage.getItem(LOCAL_STORAGE_QUESTIONS_KEY);
+            if (localQuestions) {
+              const parsedQ = JSON.parse(localQuestions).filter(q => !DEFAULT_DEMO_QUESTION_IDS.includes(q.id));
+              localStorage.setItem(LOCAL_STORAGE_QUESTIONS_KEY, JSON.stringify(parsedQ));
+            }
+          } catch (err) {
+            console.warn("Purge default demo data check:", err.message);
+          }
+        },
+
+        async fetchRepositories() {
+          try {
+            const reposRef = ref(rtdb, "repositories");
+            const snapshot = await get(reposRef);
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              return Object.values(data).filter(r => r && !DEFAULT_DEMO_REPO_IDS.includes(r.id));
+            } else {
+              return [];
+            }
+          } catch (err) {
+            console.warn("Firebase fetch repos error:", err);
+            const local = localStorage.getItem(LOCAL_STORAGE_REPOS_KEY);
+            if (local) return JSON.parse(local).filter(r => r && !DEFAULT_DEMO_REPO_IDS.includes(r.id));
+            return [];
+          }
+        },
+
+        async fetchQuestions() {
+          try {
+            const qRef = ref(rtdb, "questions_answers");
+            const snapshot = await get(qRef);
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              return Object.values(data).filter(q => q && !DEFAULT_DEMO_QUESTION_IDS.includes(q.id));
+            } else {
+              return [];
+            }
+          } catch (err) {
+            console.warn("Firebase fetch questions error:", err);
+            const local = localStorage.getItem(LOCAL_STORAGE_QUESTIONS_KEY);
+            if (local) return JSON.parse(local).filter(q => q && !DEFAULT_DEMO_QUESTION_IDS.includes(q.id));
+            return [];
+          }
+        },
+
+        async saveRepository(repo) {
+          const id = repo.id || `repo-${Date.now()}`;
+          const now = new Date().toISOString();
+          const repoData = { ...repo, id, createdAt: repo.createdAt || now, updatedAt: now, visibility: repo.visibility || "Published" };
+          try {
+            await set(ref(rtdb, `repositories/${id}`), repoData);
+          } catch (err) { console.warn("Firebase save error:", err); }
+          const existing = await window.HootDB.fetchRepositories();
+          const index = existing.findIndex((r) => r.id === id);
+          if (index >= 0) existing[index] = repoData;
+          else existing.push(repoData);
+          localStorage.setItem(LOCAL_STORAGE_REPOS_KEY, JSON.stringify(existing));
+          return repoData;
+        },
+
+        async deleteRepository(repoId) {
+          try {
+            await remove(ref(rtdb, `repositories/${repoId}`));
+            const allQuestions = await window.HootDB.fetchQuestions();
+            const remainingQuestions = allQuestions.filter(q => q.repositoryId !== repoId);
+            const qMap = {};
+            remainingQuestions.forEach(q => { qMap[q.id] = q; });
+            await set(ref(rtdb, "questions_answers"), qMap);
+            localStorage.setItem(LOCAL_STORAGE_QUESTIONS_KEY, JSON.stringify(remainingQuestions));
+          } catch (err) { console.warn("Firebase delete error:", err); }
+          const existing = await window.HootDB.fetchRepositories();
+          const filtered = existing.filter((r) => r.id !== repoId);
+          localStorage.setItem(LOCAL_STORAGE_REPOS_KEY, JSON.stringify(filtered));
+          return true;
+        },
+
+        async clearAllRepositories() {
+          try {
+            await set(ref(rtdb, "repositories"), {});
+            await set(ref(rtdb, "questions_answers"), {});
+          } catch (err) { console.warn("Error clearing database:", err); }
+          localStorage.removeItem(LOCAL_STORAGE_REPOS_KEY);
+          localStorage.removeItem(LOCAL_STORAGE_QUESTIONS_KEY);
+          return true;
+        },
+
+        async saveQuestion(question) {
+          const id = question.id || `q-${Date.now()}`;
+          const now = new Date().toISOString();
+          const questionData = { ...question, id, displayOrder: Number(question.displayOrder) || 1, createdAt: question.createdAt || now };
+          try {
+            await set(ref(rtdb, `questions_answers/${id}`), questionData);
+          } catch (err) { console.warn("Firebase question save error:", err); }
+          const existing = await window.HootDB.fetchQuestions();
+          const index = existing.findIndex((q) => q.id === id);
+          if (index >= 0) existing[index] = questionData;
+          else existing.push(questionData);
+          localStorage.setItem(LOCAL_STORAGE_QUESTIONS_KEY, JSON.stringify(existing));
+          return questionData;
+        },
+
+        async deleteQuestion(questionId) {
+          try {
+            await remove(ref(rtdb, `questions_answers/${questionId}`));
+          } catch (err) { console.warn("Firebase question delete error:", err); }
+          const existing = await window.HootDB.fetchQuestions();
+          const filtered = existing.filter((q) => q.id !== questionId);
+          localStorage.setItem(LOCAL_STORAGE_QUESTIONS_KEY, JSON.stringify(filtered));
+          return true;
+        },
+
+        subscribeToRepositories(callback) {
+          const reposRef = ref(rtdb, "repositories");
+          return onValue(reposRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const list = Object.values(snapshot.val()).filter(r => r && !DEFAULT_DEMO_REPO_IDS.includes(r.id));
+              callback(list);
+            } else {
+              callback([]);
+            }
+          }, (err) => {
+            console.warn("Realtime listener error:", err);
+          });
+        }
+      };
+      window.dispatchEvent(new Event('HootDBReady'));
+    </script>
+
+    <!-- Main Standalone Admin Application Script -->
+    <script type="text/babel">
+      const { useState, useEffect, useMemo } = React;
+
+      // Icon Helper Component for Admin Portal
+      function Icon({ name, className = "w-4 h-4" }) {
+        const svgProps = {
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 24 24",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: "2",
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          className
+        };
+
+        switch (name) {
+          case 'ShieldCheck':
+            return <svg {...svgProps}><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>;
+          case 'Lock':
+            return <svg {...svgProps}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+          case 'Mail':
+            return <svg {...svgProps}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>;
+          case 'ArrowRight':
+            return <svg {...svgProps}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
+          case 'ArrowLeft':
+            return <svg {...svgProps}><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>;
+          case 'KeyRound':
+            return <svg {...svgProps}><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>;
+          case 'FolderGit2':
+            return <svg {...svgProps}><path d="M9 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v5"/><circle cx="13" cy="12" r="2"/><path d="M18 19c-2.8 0-5-2.2-5-5v-2"/><circle cx="20" cy="19" r="2"/></svg>;
+          case 'HelpCircle':
+            return <svg {...svgProps}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>;
+          case 'Tag':
+            return <svg {...svgProps}><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>;
+          case 'Database':
+            return <svg {...svgProps}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>;
+          case 'CheckCircle2':
+            return <svg {...svgProps}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>;
+          case 'Trash2':
+            return <svg {...svgProps}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>;
+          case 'RefreshCw':
+            return <svg {...svgProps}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>;
+          case 'LogOut':
+            return <svg {...svgProps}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>;
+          case 'FileCode2':
+            return <svg {...svgProps}><path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a1 1 0 0 0 1 1h4"/><path d="m5 12-3 3 3 3"/><path d="m9 18 3-3-3-3"/></svg>;
+          case 'Search':
+            return <svg {...svgProps}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
+          case 'Plus':
+            return <svg {...svgProps}><path d="M5 12h14"/><path d="M12 5v14"/></svg>;
+          case 'Edit2':
+            return <svg {...svgProps}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>;
+          case 'X':
+            return <svg {...svgProps}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
+          case 'AlertTriangle':
+            return <svg {...svgProps}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>;
+          case 'BookOpen':
+            return <svg {...svgProps}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+          case 'Info':
+            return <svg {...svgProps}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>;
+          default:
+            return <svg {...svgProps}><circle cx="12" cy="12" r="10"/></svg>;
+        }
+      }
+
+      // Toast System for Admin
+      function ToastContainer({ toasts, removeToast }) {
+        return (
+          <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+            {toasts.map((toast) => (
+              <ToastItem key={toast.id} toast={toast} onDismiss={() => removeToast(toast.id)} />
+            ))}
+          </div>
+        );
+      }
+
+      function ToastItem({ toast, onDismiss }) {
+        useEffect(() => {
+          const timer = setTimeout(() => onDismiss(), toast.duration || 3500);
+          return () => clearTimeout(timer);
+        }, [toast, onDismiss]);
+
+        const borders = {
+          success: 'border-emerald-500/30 bg-emerald-950/80 text-emerald-100',
+          error: 'border-rose-500/30 bg-rose-950/80 text-rose-100',
+          warning: 'border-amber-500/30 bg-amber-950/80 text-amber-100',
+          info: 'border-cyan-500/30 bg-cyan-950/80 text-cyan-100'
+        };
+
+        return (
+          <div className={`pointer-events-auto flex items-center justify-between gap-3 p-4 rounded-2xl border backdrop-blur-md shadow-xl transition-all ${borders[toast.type] || borders.info}`}>
+            <div className="flex items-center gap-3">
+              <Icon name={toast.type === 'success' ? 'CheckCircle2' : 'Info'} className="w-5 h-5 shrink-0" />
+              <span className="text-sm font-semibold">{toast.message}</span>
+            </div>
+            <button onClick={onDismiss} className="text-slate-400 hover:text-slate-200 p-1 rounded-lg">
+              <Icon name="X" className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      }
+
+      // Admin Login Component
+      function AdminLogin({ onLoginSuccess, addToast }) {
+        const [email, setEmail] = useState('admin@hootminer.io');
+        const [password, setPassword] = useState('hootminer2026');
+        const [loading, setLoading] = useState(false);
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          setLoading(true);
+          setTimeout(() => {
+            if (email.trim() && password.trim()) {
+              onLoginSuccess({ email, role: 'Administrator', loginTime: new Date().toISOString() });
+              if (addToast) addToast('Authenticated successfully as Admin', 'success');
+            } else {
+              if (addToast) addToast('Please enter valid credentials', 'error');
+            }
+            setLoading(false);
+          }, 400);
+        };
+
+        return (
+          <div className="py-16 max-w-md mx-auto px-4">
+            <div className="glass-panel p-8 rounded-3xl border border-slate-200 bg-white shadow-xl">
+              <div className="text-center mb-8">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-sky-500 p-[1.5px] mx-auto mb-4 shadow-md">
+                  <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
+                    <Icon name="ShieldCheck" className="w-6 h-6 text-purple-600" />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-black text-slate-900">Admin Authentication</h2>
+                <p className="text-xs text-slate-500 mt-1 font-medium">Sign in to manage repositories, Q&A entries, and database sync.</p>
+              </div>
+
+              <div className="mb-6 p-3 rounded-2xl bg-purple-50 border border-purple-200 text-xs text-purple-900 flex items-center justify-between font-medium">
+                <div className="flex items-center gap-2">
+                  <Icon name="KeyRound" className="w-4 h-4 text-purple-600 shrink-0" />
+                  <span>Demo Mode Pre-filled</span>
+                </div>
+                <span className="font-mono text-[10px] font-bold bg-purple-200/80 px-2 py-0.5 rounded-lg text-purple-900">Ready</span>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Admin Email</label>
+                  <div className="relative">
+                    <Icon name="Mail" className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-900 focus:outline-none focus:border-purple-500 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Password</label>
+                  <div className="relative">
+                    <Icon name="Lock" className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-900 focus:outline-none focus:border-purple-500 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-sm shadow-lg hover:shadow-purple-600/50 flex items-center justify-center gap-2 cursor-pointer mt-6"
+                >
+                  {loading ? (
+                    <span>Authenticating...</span>
+                  ) : (
+                    <>
+                      <span>Enter Admin Dashboard</span>
+                      <Icon name="ArrowRight" className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        );
+      }
+
+      // Repo Manager Component
+      function RepoManager({ repositories, questions, onRefresh, addToast }) {
+        const [isModalOpen, setIsModalOpen] = useState(false);
+        const [editingRepo, setEditingRepo] = useState(null);
+        const [deleteConfirmRepo, setDeleteConfirmRepo] = useState(null);
+        const [searchQuery, setSearchQuery] = useState('');
+
+        const [formData, setFormData] = useState({
+          title: '', category: 'C / C++', description: '', visibility: 'Published'
+        });
+
+        const questionCounts = useMemo(() => {
+          return questions.reduce((acc, q) => {
+            acc[q.repositoryId] = (acc[q.repositoryId] || 0) + 1;
+            return acc;
+          }, {});
+        }, [questions]);
+
+        const handleOpenCreateModal = () => {
+          setEditingRepo(null);
+          setFormData({ title: '', category: 'C / C++', description: '', visibility: 'Published' });
+          setIsModalOpen(true);
+        };
+
+        const handleOpenEditModal = (repo) => {
+          setEditingRepo(repo);
+          setFormData({
+            title: repo.title,
+            category: repo.category,
+            description: repo.description,
+            visibility: repo.visibility || 'Published'
+          });
+          setIsModalOpen(true);
+        };
+
+        const handleSaveRepo = async (e) => {
+          e.preventDefault();
+          if (!formData.title.trim() || !formData.description.trim()) {
+            addToast('Please fill out all required fields', 'error');
+            return;
+          }
+          try {
+            await window.HootDB.saveRepository({ ...editingRepo, ...formData });
+            addToast(editingRepo ? 'Repository updated' : 'Repository created', 'success');
+            setIsModalOpen(false);
+            onRefresh();
+          } catch (err) {
+            addToast('Error saving repo: ' + err.message, 'error');
+          }
+        };
+
+        const handleDeleteRepo = async () => {
+          if (!deleteConfirmRepo) return;
+          try {
+            await window.HootDB.deleteRepository(deleteConfirmRepo.id);
+            addToast(`Repository "${deleteConfirmRepo.title}" deleted`, 'warning');
+            setDeleteConfirmRepo(null);
+            onRefresh();
+          } catch (err) {
+            addToast('Error deleting repo', 'error');
+          }
+        };
+
+        const filteredRepos = repositories.filter(r =>
+          r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.description.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Icon name="Search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search repositories..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-purple-500 shadow-sm"
+                />
+              </div>
+
+              <button
+                onClick={handleOpenCreateModal}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold text-xs shadow-md cursor-pointer"
+              >
+                <Icon name="Plus" className="w-4 h-4" />
+                <span>Create New Repository</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredRepos.map((repo) => {
+                const qCount = questionCounts[repo.id] || 0;
+                return (
+                  <div key={repo.id} className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className="px-3 py-1 rounded-xl text-[11px] font-extrabold bg-purple-100 text-purple-800 border border-purple-200">
+                          {repo.category}
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold uppercase ${repo.visibility === 'Draft' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                          {repo.visibility || 'Published'}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-2 line-clamp-1">{repo.title}</h3>
+                      <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-4 leading-relaxed">{repo.description}</p>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs text-slate-500 font-bold">{qCount} {qCount === 1 ? 'Question' : 'Questions'}</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleOpenEditModal(repo)} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
+                          <Icon name="Edit2" className="w-4 h-4 text-purple-600" />
+                        </button>
+                        <button onClick={() => setDeleteConfirmRepo(repo)} className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600">
+                          <Icon name="Trash2" className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {isModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl p-6">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+                    <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <Icon name="FolderGit2" className="w-5 h-5 text-purple-600" />
+                      <span>{editingRepo ? 'Edit Repository' : 'Create Repository'}</span>
+                    </h3>
+                    <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+                      <Icon name="X" className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveRepo} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Repository Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Category Tag</label>
+                        <select
+                          value={formData.category}
+                          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none"
+                        >
+                          <option value="C / C++">C / C++</option>
+                          <option value="Python">Python</option>
+                          <option value="Java">Java</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Visibility</label>
+                        <select
+                          value={formData.visibility}
+                          onChange={(e) => setFormData({ ...formData, visibility: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none"
+                        >
+                          <option value="Published">Published</option>
+                          <option value="Draft">Draft</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Short Description *</label>
+                      <textarea
+                        required
+                        rows={3}
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-900 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                      <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                      <button type="submit" className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-extrabold shadow-md">Save Repository</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {deleteConfirmRepo && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                <div className="relative w-full max-w-md bg-white border border-rose-200 rounded-3xl shadow-2xl p-6">
+                  <div className="flex items-center gap-3 text-rose-600 mb-4">
+                    <Icon name="AlertTriangle" className="w-6 h-6" />
+                    <h3 className="text-lg font-black text-slate-900">Delete Repository?</h3>
+                  </div>
+                  <p className="text-sm text-slate-600 mb-4 font-medium leading-relaxed">
+                    Are you sure you want to delete <span className="font-bold text-slate-900">"{deleteConfirmRepo.title}"</span>? This will permanently delete the repository and all questions.
+                  </p>
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button onClick={() => setDeleteConfirmRepo(null)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                    <button onClick={handleDeleteRepo} className="px-5 py-2.5 rounded-2xl bg-rose-600 text-white text-xs font-extrabold shadow-md">Permanently Delete</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // Question Builder Component
+      function QuestionBuilder({ repositories, questions, onRefresh, addToast }) {
+        const [isModalOpen, setIsModalOpen] = useState(false);
+        const [editingQuestion, setEditingQuestion] = useState(null);
+        const [deleteConfirmQuestion, setDeleteConfirmQuestion] = useState(null);
+        const [selectedRepoFilter, setSelectedRepoFilter] = useState('All');
+        const [searchQuery, setSearchQuery] = useState('');
+
+        const [formData, setFormData] = useState({
+          repositoryId: repositories.length > 0 ? repositories[0].id : '',
+          questionTitle: '',
+          explanation: '',
+          codeSnippet: '',
+          language: 'c',
+          displayOrder: 1
+        });
+
+        const handleOpenCreateModal = () => {
+          setEditingQuestion(null);
+          setFormData({
+            repositoryId: repositories.length > 0 ? repositories[0].id : '',
+            questionTitle: '', explanation: '', codeSnippet: '', language: 'c', displayOrder: 1
+          });
+          setIsModalOpen(true);
+        };
+
+        const handleOpenEditModal = (q) => {
+          setEditingQuestion(q);
+          setFormData({
+            repositoryId: q.repositoryId,
+            questionTitle: q.questionTitle,
+            explanation: q.explanation || '',
+            codeSnippet: q.codeSnippet || '',
+            language: q.language || 'c',
+            displayOrder: q.displayOrder || 1
+          });
+          setIsModalOpen(true);
+        };
+
+        const handleSaveQuestion = async (e) => {
+          e.preventDefault();
+          if (!formData.repositoryId || !formData.questionTitle.trim() || !formData.codeSnippet.trim()) {
+            addToast('Please fill out repository, question title, and code solution', 'error');
+            return;
+          }
+
+          try {
+            await window.HootDB.saveQuestion({ ...editingQuestion, ...formData });
+            addToast(editingQuestion ? 'Question updated' : 'New Q&A entry added', 'success');
+            setIsModalOpen(false);
+            onRefresh();
+          } catch (err) {
+            addToast('Failed to save question: ' + err.message, 'error');
+          }
+        };
+
+        const handleDelete = async () => {
+          if (!deleteConfirmQuestion) return;
+          try {
+            await window.HootDB.deleteQuestion(deleteConfirmQuestion.id);
+            addToast('Question solution deleted', 'warning');
+            setDeleteConfirmQuestion(null);
+            onRefresh();
+          } catch (err) {
+            addToast('Error deleting question', 'error');
+          }
+        };
+
+        const repoMap = useMemo(() => {
+          return repositories.reduce((acc, r) => { acc[r.id] = r.title; return acc; }, {});
+        }, [repositories]);
+
+        const filteredQuestions = questions.filter(q => {
+          const matchesRepo = selectedRepoFilter === 'All' || q.repositoryId === selectedRepoFilter;
+          const matchesQuery = q.questionTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                               (q.explanation && q.explanation.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                               (q.codeSnippet && q.codeSnippet.toLowerCase().includes(searchQuery.toLowerCase()));
+          return matchesRepo && matchesQuery;
+        });
+
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                <div className="bg-white border border-slate-200 rounded-2xl px-3 py-2 text-xs font-bold text-slate-700 shadow-sm flex items-center gap-2">
+                  <Icon name="BookOpen" className="w-4 h-4 text-purple-600 shrink-0" />
+                  <select
+                    value={selectedRepoFilter}
+                    onChange={(e) => setSelectedRepoFilter(e.target.value)}
+                    className="bg-transparent text-slate-900 focus:outline-none cursor-pointer w-full"
+                  >
+                    <option value="All">All Repositories ({questions.length})</option>
+                    {repositories.map(r => (
+                      <option key={r.id} value={r.id}>{r.title}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="relative flex-1">
+                  <Icon name="Search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search questions & code..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-purple-500 shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleOpenCreateModal}
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-extrabold text-xs shadow-md cursor-pointer"
+              >
+                <Icon name="Plus" className="w-4 h-4" />
+                <span>Add New Q&A Solution</span>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {filteredQuestions.map((q) => (
+                <div key={q.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-3 py-1 rounded-xl text-[11px] font-extrabold bg-purple-100 text-purple-800 border border-purple-200">
+                        {repoMap[q.repositoryId] || 'Unassigned Repo'}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold uppercase bg-slate-100 text-slate-700">
+                        {q.language}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => handleOpenEditModal(q)} className="p-2 rounded-xl bg-slate-100 text-slate-700">
+                        <Icon name="Edit2" className="w-4 h-4 text-purple-600" />
+                      </button>
+                      <button onClick={() => setDeleteConfirmQuestion(q)} className="p-2 rounded-xl bg-rose-50 text-rose-600">
+                        <Icon name="Trash2" className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h4 className="text-base font-bold text-slate-900 mb-2">{q.questionTitle}</h4>
+                  {q.explanation && <p className="text-xs text-slate-600 mb-4 line-clamp-2 leading-relaxed">{q.explanation}</p>}
+                  <div className="rounded-2xl p-3 bg-[#0f172a] text-cyan-200 font-mono text-xs overflow-x-auto border border-slate-800 max-h-36">
+                    <pre>{q.codeSnippet}</pre>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {isModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+                    <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <Icon name="HelpCircle" className="w-5 h-5 text-sky-600" />
+                      <span>{editingQuestion ? 'Edit Question & Solution' : 'Add New Q&A Solution'}</span>
+                    </h3>
+                    <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+                      <Icon name="X" className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveQuestion} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Parent Repository *</label>
+                      <select
+                        required
+                        value={formData.repositoryId}
+                        onChange={(e) => setFormData({ ...formData, repositoryId: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none"
+                      >
+                        {repositories.map(r => (
+                          <option key={r.id} value={r.id}>{r.title} ({r.category})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Question Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.questionTitle}
+                        onChange={(e) => setFormData({ ...formData, questionTitle: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Language</label>
+                        <select
+                          value={formData.language}
+                          onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none"
+                        >
+                          <option value="c">C Language</option>
+                          <option value="cpp">C++</option>
+                          <option value="python">Python 3</option>
+                          <option value="java">Java</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Display Order #</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={formData.displayOrder}
+                          onChange={(e) => setFormData({ ...formData, displayOrder: e.target.value })}
+                          className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-900 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Explanation Notes</label>
+                      <textarea
+                        rows={2}
+                        value={formData.explanation}
+                        onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-900 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Code Solution Snippet *</label>
+                      <textarea
+                        required
+                        rows={8}
+                        value={formData.codeSnippet}
+                        onChange={(e) => setFormData({ ...formData, codeSnippet: e.target.value })}
+                        className="w-full p-4 bg-[#0f172a] text-cyan-200 font-mono text-xs leading-relaxed rounded-2xl focus:outline-none border border-slate-800"
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                      <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                      <button type="submit" className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white text-xs font-extrabold shadow-md">Save Question Solution</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {deleteConfirmQuestion && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                <div className="relative w-full max-w-md bg-white border border-rose-200 rounded-3xl shadow-2xl p-6">
+                  <h3 className="text-lg font-black text-slate-900 mb-2">Delete Question Solution?</h3>
+                  <p className="text-sm text-slate-600 mb-4 font-medium">
+                    Are you sure you want to delete <span className="font-bold text-slate-900">"{deleteConfirmQuestion.questionTitle}"</span>?
+                  </p>
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button onClick={() => setDeleteConfirmQuestion(null)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                    <button onClick={handleDelete} className="px-5 py-2.5 rounded-2xl bg-rose-600 text-white text-xs font-extrabold shadow-md">Permanently Delete</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // Admin Dashboard Base Component
+      function AdminDashboard({ adminUser, onLogout, repositories, questions, onRefresh, addToast }) {
+        const [activeTab, setActiveTab] = useState('repos');
+        const [confirmClearAll, setConfirmClearAll] = useState(false);
+
+        const totalRepos = repositories.length;
+        const totalQuestions = questions.length;
+
+        const categoryCounts = repositories.reduce((acc, r) => {
+          acc[r.category] = (acc[r.category] || 0) + 1;
+          return acc;
+        }, {});
+        
+        const topCategory = Object.keys(categoryCounts).length > 0 
+          ? Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b)
+          : 'None';
+
+        const handleClearAllData = async () => {
+          try {
+            await window.HootDB.clearAllRepositories();
+            addToast('All repositories and questions cleared', 'warning');
+            setConfirmClearAll(false);
+            onRefresh();
+          } catch (err) {
+            addToast('Error clearing repositories: ' + err.message, 'error');
+          }
+        };
+
+        return (
+          <div className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold text-purple-600 uppercase tracking-widest mb-1">
+                  <Icon name="ShieldCheck" className="w-4 h-4" />
+                  <span>Admin Portal Dashboard</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
+                  Repository & Solutions Management
+                </h1>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setConfirmClearAll(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold shadow-sm cursor-pointer"
+                  title="Clear All Repositories"
+                >
+                  <Icon name="Trash2" className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Clear Repositories</span>
+                </button>
+
+                <button
+                  onClick={() => { onRefresh(); addToast('Refreshed data from Firebase', 'info'); }}
+                  className="p-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 shadow-sm cursor-pointer"
+                  title="Refresh Data"
+                >
+                  <Icon name="RefreshCw" className="w-4 h-4 text-purple-600" />
+                </button>
+
+                <button
+                  onClick={onLogout}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-sm cursor-pointer"
+                >
+                  <Icon name="LogOut" className="w-3.5 h-3.5 text-pink-400" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="glass-panel p-5 rounded-3xl border border-slate-200 bg-white flex items-center justify-between shadow-sm">
+                <div>
+                  <div className="text-xs text-slate-500 font-bold mb-1">Total Repositories</div>
+                  <div className="text-3xl font-black text-slate-900">{totalRepos}</div>
+                  <div className="text-[11px] text-purple-600 font-bold mt-1">Active categories</div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-purple-600 shadow-sm">
+                  <Icon name="FolderGit2" className="w-6 h-6" />
+                </div>
+              </div>
+
+              <div className="glass-panel p-5 rounded-3xl border border-slate-200 bg-white flex items-center justify-between shadow-sm">
+                <div>
+                  <div className="text-xs text-slate-500 font-bold mb-1">Total Questions</div>
+                  <div className="text-3xl font-black text-sky-600">{totalQuestions}</div>
+                  <div className="text-[11px] text-sky-600 font-bold mt-1">Code solutions ready</div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 text-sky-600 shadow-sm">
+                  <Icon name="HelpCircle" className="w-6 h-6" />
+                </div>
+              </div>
+
+              <div className="glass-panel p-5 rounded-3xl border border-slate-200 bg-white flex items-center justify-between shadow-sm">
+                <div>
+                  <div className="text-xs text-slate-500 font-bold mb-1">Top Active Category</div>
+                  <div className="text-xl font-black text-emerald-700">{topCategory}</div>
+                  <div className="text-[11px] text-slate-500 font-bold mt-1">{categoryCounts[topCategory] || 0} Repositories</div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm">
+                  <Icon name="Tag" className="w-6 h-6" />
+                </div>
+              </div>
+
+              <div className="glass-panel p-5 rounded-3xl border border-slate-200 bg-white flex items-center justify-between shadow-sm">
+                <div>
+                  <div className="text-xs text-slate-500 font-bold mb-1">Database Status</div>
+                  <div className="text-lg font-black text-slate-900 flex items-center gap-1.5">
+                    <Icon name="CheckCircle2" className="w-4 h-4 text-emerald-600" />
+                    <span>Realtime</span>
+                  </div>
+                  <div className="text-[11px] text-emerald-600 font-bold mt-1">Ready for custom repos</div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 shadow-sm">
+                  <Icon name="Database" className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 border-b border-slate-200 mb-6">
+              <button
+                onClick={() => setActiveTab('repos')}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-extrabold border-b-2 transition-all cursor-pointer ${
+                  activeTab === 'repos' ? 'border-purple-600 text-purple-700' : 'border-transparent text-slate-500'
+                }`}
+              >
+                <Icon name="FolderGit2" className="w-4 h-4" />
+                <span>Repositories ({totalRepos})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('questions')}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-extrabold border-b-2 transition-all cursor-pointer ${
+                  activeTab === 'questions' ? 'border-sky-600 text-sky-700' : 'border-transparent text-slate-500'
+                }`}
+              >
+                <Icon name="FileCode2" className="w-4 h-4" />
+                <span>Questions & Solutions ({totalQuestions})</span>
+              </button>
+            </div>
+
+            {activeTab === 'repos' ? (
+              <RepoManager
+                repositories={repositories}
+                questions={questions}
+                onRefresh={onRefresh}
+                addToast={addToast}
+              />
+            ) : (
+              <QuestionBuilder
+                repositories={repositories}
+                questions={questions}
+                onRefresh={onRefresh}
+                addToast={addToast}
+              />
+            )}
+
+            {confirmClearAll && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                <div className="relative w-full max-w-md bg-white border border-rose-200 rounded-3xl shadow-2xl p-6">
+                  <div className="flex items-center gap-3 text-rose-600 mb-3">
+                    <Icon name="Trash2" className="w-6 h-6" />
+                    <h3 className="text-lg font-black text-slate-900">Purge All Repositories?</h3>
+                  </div>
+                  <p className="text-xs text-slate-600 font-medium leading-relaxed mb-4">
+                    This will clear all repositories and questions from the database so you can start with a 100% clean list.
+                  </p>
+                  <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+                    <button onClick={() => setConfirmClearAll(false)} className="px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                    <button onClick={handleClearAllData} className="px-5 py-2.5 rounded-2xl bg-rose-600 text-white text-xs font-extrabold shadow-md">Confirm Clear</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // Root Admin Application
+      function AdminApp() {
+        const [adminUser, setAdminUser] = useState(null);
+        const [repositories, setRepositories] = useState([]);
+        const [questions, setQuestions] = useState([]);
+        const [toasts, setToasts] = useState([]);
+
+        const addToast = (message, type = 'info') => {
+          const id = Date.now() + Math.random();
+          setToasts((prev) => [...prev, { id, message, type }]);
+        };
+
+        const removeToast = (id) => {
+          setToasts((prev) => prev.filter((t) => t.id !== id));
+        };
+
+        const loadData = async () => {
+          if (!window.HootDB) return;
+          try {
+            await window.HootDB.seedInitialDataIfNeeded();
+            const repos = await window.HootDB.fetchRepositories();
+            const qList = await window.HootDB.fetchQuestions();
+            setRepositories(repos);
+            setQuestions(qList);
+          } catch (err) {
+            console.warn("Admin data load error:", err);
+          }
+        };
+
+        useEffect(() => {
+          if (window.HootDB) {
+            loadData();
+            const unsubscribe = window.HootDB.subscribeToRepositories((newRepos) => {
+              setRepositories(newRepos);
+            });
+            return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
+          } else {
+            const handleReady = () => {
+              loadData();
+              if (window.HootDB) {
+                window.HootDB.subscribeToRepositories((newRepos) => {
+                  setRepositories(newRepos);
+                });
+              }
+            };
+            window.addEventListener('HootDBReady', handleReady);
+            return () => window.removeEventListener('HootDBReady', handleReady);
+          }
+        }, []);
+
+        return (
+          <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
+
+            <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur-xl shadow-sm">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-pink-500 to-sky-500 p-[1.5px] shadow-sm">
+                    <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center">
+                      <Icon name="ShieldCheck" className="w-5 h-5 text-purple-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-lg text-slate-900">Hoot <span className="gradient-text-purple">Miner</span></span>
+                      <span className="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-lg bg-purple-100 text-purple-800 border border-purple-200">
+                        Admin Portal
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-medium">Management & Solution Controls</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <a
+                    href="index.html"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 hover:text-purple-700 hover:border-purple-300 transition-all shadow-sm"
+                  >
+                    <Icon name="ArrowLeft" className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Public Client App</span>
+                  </a>
+                </div>
+              </div>
+            </header>
+
+            <main className="flex-1">
+              {adminUser ? (
+                <AdminDashboard
+                  adminUser={adminUser}
+                  onLogout={() => {
+                    setAdminUser(null);
+                    addToast('Logged out of Admin Portal', 'info');
+                  }}
+                  repositories={repositories}
+                  questions={questions}
+                  onRefresh={loadData}
+                  addToast={addToast}
+                />
+              ) : (
+                <AdminLogin
+                  onLoginSuccess={(user) => setAdminUser(user)}
+                  addToast={addToast}
+                />
+              )}
+            </main>
+
+            <footer className="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 font-medium">
+              <div>Hoot Miner Admin System • Restricted Portal • All Actions Logged</div>
+            </footer>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('admin-root'));
+      root.render(<AdminApp />);
+    </script>
+  </body>
+</html>

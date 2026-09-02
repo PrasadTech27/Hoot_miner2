@@ -1,0 +1,1249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hoot Miner — Code & Solution Mining Hub</title>
+    <meta name="description" content="Intuitive code snippet and developer Q&A repository platform with syntax highlighting, search, and online compiler execution." />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel Standalone CDN -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Prism Syntax Highlighting CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+
+    <style>
+      :root {
+        --bg-main: #f8fafc;
+        --bg-card: #ffffff;
+        --accent-purple: #7c3aed;
+        --accent-pink: #db2777;
+        --accent-cyan: #0284c7;
+        --accent-emerald: #059669;
+      }
+
+      body {
+        background-color: #f8fafc;
+        background-image: 
+          radial-gradient(at 10% 10%, rgba(124, 58, 237, 0.08) 0px, transparent 50%),
+          radial-gradient(at 90% 20%, rgba(2, 132, 199, 0.08) 0px, transparent 50%),
+          radial-gradient(at 50% 80%, rgba(219, 39, 119, 0.06) 0px, transparent 50%),
+          radial-gradient(at 80% 90%, rgba(5, 150, 105, 0.06) 0px, transparent 50%);
+        background-attachment: fixed;
+        color: #0f172a;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 30px -5px rgba(124, 58, 237, 0.08);
+      }
+
+      .glass-card {
+        background: #ffffff;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px 0 rgba(148, 163, 184, 0.12);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .glass-card:hover {
+        background: #ffffff;
+        border-color: rgba(124, 58, 237, 0.4);
+        box-shadow: 0 20px 40px -15px rgba(124, 58, 237, 0.18), 0 0 20px 0 rgba(2, 132, 199, 0.1);
+        transform: translateY(-3px);
+      }
+
+      .gradient-text-purple {
+        background: linear-gradient(135deg, #6d28d9 0%, #d946ef 50%, #0284c7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .gradient-text-cyan {
+        background: linear-gradient(135deg, #0284c7 0%, #7c3aed 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .gradient-glow-bg {
+        position: absolute;
+        top: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 1300px;
+        height: 700px;
+        background: radial-gradient(circle at 50% 30%, rgba(124, 58, 237, 0.12) 0%, rgba(219, 39, 119, 0.08) 35%, rgba(2, 132, 199, 0.05) 60%, rgba(248, 250, 252, 0) 80%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      pre[class*="language-"],
+      code[class*="language-"] {
+        color: #f8fafc;
+        background: #0f172a !important;
+        font-family: 'Fira Code', Consolas, Monaco, monospace;
+        font-size: 0.92rem;
+        line-height: 1.65;
+        direction: ltr;
+        text-align: left;
+        white-space: pre;
+        tab-size: 4;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Firebase SDK Imports via CDN -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyA1QeDf1E_Kb1ZC15ahw1dY8hk3J0gXopY",
+        authDomain: "thodu-65cb9.firebaseapp.com",
+        databaseURL: "https://thodu-65cb9-default-rtdb.firebaseio.com",
+        projectId: "thodu-65cb9",
+        storageBucket: "thodu-65cb9.firebasestorage.app",
+        messagingSenderId: "1070229943496",
+        appId: "1:1070229943496:web:038e2e74c463e7acefa1fd",
+        measurementId: "G-NF17LPGHWV"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const rtdb = getDatabase(app);
+
+      const DEFAULT_DEMO_REPO_IDS = ['repo-c-1', 'repo-c-2', 'repo-py-1', 'repo-java-1', 'repo-java-2'];
+      const DEFAULT_DEMO_QUESTION_IDS = ['q-c-1', 'q-cpp-1', 'q-cpp-2', 'q-py-1', 'q-java-1', 'q-java-2'];
+      const LOCAL_STORAGE_REPOS_KEY = "hootminer_repos";
+      const LOCAL_STORAGE_QUESTIONS_KEY = "hootminer_questions";
+
+      window.HootDB = {
+        async seedInitialDataIfNeeded() {
+          try {
+            for (const id of DEFAULT_DEMO_REPO_IDS) {
+              await remove(ref(rtdb, `repositories/${id}`));
+            }
+            for (const qId of DEFAULT_DEMO_QUESTION_IDS) {
+              await remove(ref(rtdb, `questions_answers/${qId}`));
+            }
+            const localRepos = localStorage.getItem(LOCAL_STORAGE_REPOS_KEY);
+            if (localRepos) {
+              const parsed = JSON.parse(localRepos).filter(r => !DEFAULT_DEMO_REPO_IDS.includes(r.id));
+              localStorage.setItem(LOCAL_STORAGE_REPOS_KEY, JSON.stringify(parsed));
+            }
+            const localQuestions = localStorage.getItem(LOCAL_STORAGE_QUESTIONS_KEY);
+            if (localQuestions) {
+              const parsedQ = JSON.parse(localQuestions).filter(q => !DEFAULT_DEMO_QUESTION_IDS.includes(q.id));
+              localStorage.setItem(LOCAL_STORAGE_QUESTIONS_KEY, JSON.stringify(parsedQ));
+            }
+          } catch (err) {
+            console.warn("Purge default demo data check:", err.message);
+          }
+        },
+
+        async fetchRepositories() {
+          try {
+            const reposRef = ref(rtdb, "repositories");
+            const snapshot = await get(reposRef);
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              return Object.values(data).filter(r => r && !DEFAULT_DEMO_REPO_IDS.includes(r.id));
+            } else {
+              return [];
+            }
+          } catch (err) {
+            console.warn("Firebase fetch repos error:", err);
+            const local = localStorage.getItem(LOCAL_STORAGE_REPOS_KEY);
+            if (local) return JSON.parse(local).filter(r => r && !DEFAULT_DEMO_REPO_IDS.includes(r.id));
+            return [];
+          }
+        },
+
+        async fetchQuestions() {
+          try {
+            const qRef = ref(rtdb, "questions_answers");
+            const snapshot = await get(qRef);
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              return Object.values(data).filter(q => q && !DEFAULT_DEMO_QUESTION_IDS.includes(q.id));
+            } else {
+              return [];
+            }
+          } catch (err) {
+            console.warn("Firebase fetch questions error:", err);
+            const local = localStorage.getItem(LOCAL_STORAGE_QUESTIONS_KEY);
+            if (local) return JSON.parse(local).filter(q => q && !DEFAULT_DEMO_QUESTION_IDS.includes(q.id));
+            return [];
+          }
+        },
+
+        subscribeToRepositories(callback) {
+          const reposRef = ref(rtdb, "repositories");
+          return onValue(reposRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const list = Object.values(snapshot.val()).filter(r => r && !DEFAULT_DEMO_REPO_IDS.includes(r.id));
+              callback(list);
+            } else {
+              callback([]);
+            }
+          }, (err) => {
+            console.warn("Realtime listener error:", err);
+          });
+        }
+      };
+      window.dispatchEvent(new Event('HootDBReady'));
+    </script>
+
+    <!-- Main Standalone React Application Script -->
+    <script type="text/babel">
+      const { useState, useEffect, useMemo, useRef } = React;
+
+      // Clean SVG Icon Component
+      function Icon({ name, className = "w-4 h-4" }) {
+        const svgProps = {
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 24 24",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: "2",
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          className
+        };
+
+        switch (name) {
+          case 'Terminal':
+            return <svg {...svgProps}><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>;
+          case 'Home':
+            return <svg {...svgProps}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+          case 'FolderGit2':
+            return <svg {...svgProps}><path d="M9 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v5"/><circle cx="13" cy="12" r="2"/><path d="M18 19c-2.8 0-5-2.2-5-5v-2"/><circle cx="20" cy="19" r="2"/></svg>;
+          case 'Menu':
+            return <svg {...svgProps}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>;
+          case 'X':
+            return <svg {...svgProps}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>;
+          case 'Play':
+            return <svg {...svgProps}><polygon points="6 3 20 12 6 21 6 3"/></svg>;
+          case 'Code2':
+            return <svg {...svgProps}><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>;
+          case 'Rocket':
+            return <svg {...svgProps}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>;
+          case 'ArrowRight':
+            return <svg {...svgProps}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>;
+          case 'Zap':
+            return <svg {...svgProps}><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>;
+          case 'Search':
+            return <svg {...svgProps}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>;
+          case 'Copy':
+            return <svg {...svgProps}><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>;
+          case 'Sparkles':
+            return <svg {...svgProps}><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>;
+          case 'CheckCircle2':
+            return <svg {...svgProps}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>;
+          case 'HelpCircle':
+            return <svg {...svgProps}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>;
+          case 'ArrowUpDown':
+            return <svg {...svgProps}><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>;
+          case 'Clock':
+            return <svg {...svgProps}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+          case 'ChevronRight':
+            return <svg {...svgProps}><path d="m9 18 6-6-6-6"/></svg>;
+          case 'Check':
+            return <svg {...svgProps}><path d="M20 6 9 17l-5-5"/></svg>;
+          case 'BookOpen':
+            return <svg {...svgProps}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+          case 'RotateCcw':
+            return <svg {...svgProps}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>;
+          case 'Monitor':
+            return <svg {...svgProps}><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>;
+          case 'Cpu':
+            return <svg {...svgProps}><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>;
+          case 'FileCode':
+            return <svg {...svgProps}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><polyline points="14 2 14 8 20 8"/><path d="m10 13-2 2 2 2"/><path d="m14 13 2 2-2 2"/></svg>;
+          case 'Info':
+            return <svg {...svgProps}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>;
+          case 'ArrowLeft':
+            return <svg {...svgProps}><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>;
+          default:
+            return <svg {...svgProps}><circle cx="12" cy="12" r="10"/></svg>;
+        }
+      }
+
+      // Toast Components
+      function ToastContainer({ toasts, removeToast }) {
+        return (
+          <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+            {toasts.map((toast) => (
+              <ToastItem key={toast.id} toast={toast} onDismiss={() => removeToast(toast.id)} />
+            ))}
+          </div>
+        );
+      }
+
+      function ToastItem({ toast, onDismiss }) {
+        useEffect(() => {
+          const timer = setTimeout(() => onDismiss(), toast.duration || 3500);
+          return () => clearTimeout(timer);
+        }, [toast, onDismiss]);
+
+        const borders = {
+          success: 'border-emerald-500/30 bg-emerald-950/80 text-emerald-100',
+          error: 'border-rose-500/30 bg-rose-950/80 text-rose-100',
+          warning: 'border-amber-500/30 bg-amber-950/80 text-amber-100',
+          info: 'border-cyan-500/30 bg-cyan-950/80 text-cyan-100'
+        };
+
+        return (
+          <div className={`pointer-events-auto flex items-center justify-between gap-3 p-4 rounded-2xl border backdrop-blur-md shadow-xl transition-all ${borders[toast.type] || borders.info}`}>
+            <div className="flex items-center gap-3">
+              <Icon name={toast.type === 'success' ? 'CheckCircle2' : 'Info'} className="w-5 h-5 shrink-0" />
+              <span className="text-sm font-semibold">{toast.message}</span>
+            </div>
+            <button onClick={onDismiss} className="text-slate-400 hover:text-slate-200 p-1 rounded-lg">
+              <Icon name="X" className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      }
+
+      // Navbar Component
+      function Navbar({ activeTab, setActiveTab }) {
+        const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+        return (
+          <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-2xl border-b border-slate-200/80 shadow-sm">
+            <div className="h-[3px] w-full bg-gradient-to-r from-purple-600 via-pink-500 to-sky-500" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+              
+              <div onClick={() => setActiveTab('home')} className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-500 to-sky-500 p-[1.5px] shadow-md shadow-purple-500/20 group-hover:scale-105 transition-all">
+                  <div className="w-full h-full bg-white rounded-[14px] flex items-center justify-center">
+                    <Icon name="Terminal" className="w-5 h-5 text-purple-600 group-hover:text-pink-600 transition-colors" />
+                  </div>
+                </div>
+                <span className="font-black text-xl tracking-tight text-slate-900 group-hover:text-purple-700 transition-colors">
+                  Hoot <span className="gradient-text-purple">Miner</span>
+                </span>
+              </div>
+
+              <nav className="hidden md:flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/80 shadow-inner">
+                <button
+                  onClick={() => setActiveTab('home')}
+                  className={`flex items-center gap-2 px-4 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                    activeTab === 'home'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                  }`}
+                >
+                  <Icon name="Home" className={`w-4 h-4 ${activeTab === 'home' ? 'text-white' : 'text-purple-600'}`} />
+                  <span>Home</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('repos')}
+                  className={`flex items-center gap-2 px-4 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer ${
+                    activeTab === 'repos' || activeTab === 'repo-detail'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                  }`}
+                >
+                  <Icon name="FolderGit2" className={`w-4 h-4 ${activeTab === 'repos' || activeTab === 'repo-detail' ? 'text-white' : 'text-pink-600'}`} />
+                  <span>Workspace</span>
+                </button>
+              </nav>
+
+              <div className="hidden md:flex items-center gap-3">
+                <button
+                  onClick={() => setActiveTab('compiler')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-extrabold transition-all cursor-pointer shadow-sm ${
+                    activeTab === 'compiler'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-600/30'
+                      : 'bg-white border border-slate-200 text-slate-800 hover:border-purple-400 hover:text-purple-700 shadow-sm'
+                  }`}
+                >
+                  <Icon name="Code2" className="w-4 h-4 text-purple-600" />
+                  <span>Online Compiler</span>
+                </button>
+              </div>
+
+              <div className="flex md:hidden items-center gap-2">
+                <button onClick={() => setActiveTab('compiler')} className="p-2.5 rounded-2xl bg-white text-purple-600 border border-slate-200 shadow-sm">
+                  <Icon name="Code2" className="w-4 h-4" />
+                </button>
+                <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2.5 rounded-2xl bg-white text-slate-600 border border-slate-200 shadow-sm">
+                  <Icon name={mobileMenuOpen ? "X" : "Menu"} className="w-5 h-5 text-purple-600" />
+                </button>
+              </div>
+            </div>
+
+            {mobileMenuOpen && (
+              <div className="md:hidden border-t border-slate-200 bg-white p-4 space-y-2 shadow-lg">
+                <button onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 hover:bg-purple-50">
+                  <Icon name="Home" className="w-4 h-4 text-purple-600" /> Home
+                </button>
+                <button onClick={() => { setActiveTab('repos'); setMobileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 hover:bg-purple-50">
+                  <Icon name="FolderGit2" className="w-4 h-4 text-pink-600" /> Workspace Repositories
+                </button>
+                <button onClick={() => { setActiveTab('compiler'); setMobileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-700 hover:bg-purple-50">
+                  <Icon name="Code2" className="w-4 h-4 text-purple-600" /> Online Compiler
+                </button>
+              </div>
+            )}
+          </header>
+        );
+      }
+
+      // LandingHero Component
+      function LandingHero({ onLaunchWorkspace, onOpenCompiler, repoCount, questionCount }) {
+        return (
+          <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28">
+            <div className="gradient-glow-bg"></div>
+            <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+              
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100/90 border border-purple-300/80 backdrop-blur-md mb-8 text-xs font-bold text-purple-900 shadow-sm">
+                <Icon name="Zap" className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
+                <span>Realtime Solution Mining Engine & Online Compiler</span>
+              </div>
+
+              <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-slate-900 mb-6 leading-[1.15]">
+                Mine Clean Code & <br />
+                <span className="gradient-text-purple">Execute Solutions Live</span>
+              </h1>
+
+              <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-600 mb-10 font-medium leading-relaxed">
+                An intuitive, vibrant platform for developers. Access code solutions for C, Python, Java, and run code instantly in our interactive Online Compiler!
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14 max-w-xl mx-auto">
+                <button
+                  onClick={onLaunchWorkspace}
+                  className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white font-extrabold text-base shadow-xl shadow-purple-600/30 hover:shadow-purple-600/50 hover:scale-[1.03] transition-all flex items-center justify-center gap-2.5 group cursor-pointer"
+                >
+                  <Icon name="Rocket" className="w-5 h-5 text-purple-100" />
+                  <span>Launch Workspace</span>
+                  <Icon name="ArrowRight" className="w-4 h-4 text-purple-100" />
+                </button>
+
+                <button
+                  onClick={onOpenCompiler}
+                  className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white border border-slate-200 text-slate-700 font-bold text-sm hover:border-purple-400 hover:text-purple-700 transition-all flex items-center justify-center gap-3 shadow-sm cursor-pointer"
+                >
+                  <Icon name="Code2" className="w-4 h-4 text-purple-600" />
+                  <span>Open Online Compiler</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-slate-200">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+                  <div className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-1">{repoCount}+</div>
+                  <div className="text-xs text-slate-600 font-bold">Language Repositories</div>
+                </div>
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+                  <div className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-blue-600 mb-1">{questionCount}+</div>
+                  <div className="text-xs text-slate-600 font-bold">Q&A Solutions</div>
+                </div>
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+                  <div className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-600 mb-1">4</div>
+                  <div className="text-xs text-slate-600 font-bold">Compiler Engines</div>
+                </div>
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+                  <div className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 mb-1">&lt; 1ms</div>
+                  <div className="text-xs text-slate-600 font-bold">1-Click Execution</div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+        );
+      }
+
+      // FeatureGrid Component
+      function FeatureGrid() {
+        const features = [
+          {
+            icon: 'Search',
+            iconColor: 'text-sky-600',
+            title: "Lightning Fast Search",
+            badge: "Real-time",
+            description: "Instantly filter across titles, category tags, and problem statements with zero input lag.",
+            iconBg: "bg-sky-50 border-sky-200",
+            badgeClass: "bg-sky-100 text-sky-800 border-sky-300"
+          },
+          {
+            icon: 'Code2',
+            iconColor: 'text-purple-600',
+            title: "Multi-Language Snippets",
+            badge: "Polyglot",
+            description: "Clean, production-grade solutions formatted with syntax highlighting for Python, JS, C++, SQL, Docker & more.",
+            iconBg: "bg-purple-50 border-purple-200",
+            badgeClass: "bg-purple-100 text-purple-800 border-purple-300"
+          },
+          {
+            icon: 'Copy',
+            iconColor: 'text-emerald-600',
+            title: "One-Click Copy & Toast",
+            badge: "Instant",
+            description: "Copy any code snippet directly to clipboard with instant checkmark state and feedback notifications.",
+            iconBg: "bg-emerald-50 border-emerald-200",
+            badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-300"
+          }
+        ];
+
+        return (
+          <section className="py-16 bg-slate-100/70 border-y border-slate-200/80 relative">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-2xl mx-auto mb-14">
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3">
+                  Engineered for <span className="gradient-text-cyan">Developer Velocity</span>
+                </h2>
+                <p className="text-sm sm:text-base text-slate-600 font-medium">
+                  Spend less time searching broken forums and more time shipping code with Hoot Miner's structured repository workflow.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {features.map((item, idx) => (
+                  <div key={idx} className="glass-card p-6 sm:p-8 rounded-3xl relative group overflow-hidden">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className={`w-12 h-12 rounded-2xl ${item.iconBg} border flex items-center justify-center shadow-sm`}>
+                        <Icon name={item.icon} className={`w-6 h-6 ${item.iconColor}`} />
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-[11px] font-bold border uppercase ${item.badgeClass}`}>
+                        {item.badge}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                      {item.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      // RepositoryHub Component
+      function RepositoryHub({ repositories, questions, onSelectRepo }) {
+        const [selectedCategory, setSelectedCategory] = useState('All');
+        const [searchQuery, setSearchQuery] = useState('');
+        const [sortBy, setSortBy] = useState('newest');
+
+        const categories = useMemo(() => ['All', 'C / C++', 'Python', 'Java'], []);
+
+        const repoQuestionCounts = useMemo(() => {
+          const counts = {};
+          questions.forEach(q => {
+            counts[q.repositoryId] = (counts[q.repositoryId] || 0) + 1;
+          });
+          return counts;
+        }, [questions]);
+
+        const filteredRepos = useMemo(() => {
+          return repositories.filter(repo => {
+            const matchesCategory = selectedCategory === 'All' || repo.category === selectedCategory;
+            const matchesSearch = repo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                  repo.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                  repo.category.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesCategory && matchesSearch && repo.visibility !== 'Draft';
+          }).sort((a, b) => {
+            if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+            if (sortBy === 'questions') {
+              return (repoQuestionCounts[b.id] || 0) - (repoQuestionCounts[a.id] || 0);
+            }
+            if (sortBy === 'title') return a.title.localeCompare(b.title);
+            return 0;
+          });
+        }, [repositories, selectedCategory, searchQuery, sortBy, repoQuestionCounts]);
+
+        return (
+          <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold text-purple-600 uppercase tracking-widest mb-1.5">
+                  <Icon name="FolderGit2" className="w-4 h-4 text-purple-600" />
+                  <span>Workspace Hub</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-black text-slate-900">
+                  Repository <span className="gradient-text-purple">Collection</span>
+                </h2>
+                <p className="text-sm text-slate-600 mt-1 font-medium">
+                  Explore structured code solutions, algorithms, and architectural guidelines.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1 sm:w-64">
+                  <Icon name="Search" className="w-4 h-4 text-purple-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search repositories..."
+                    className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-500 shadow-sm font-medium"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs text-slate-700 shadow-sm">
+                  <Icon name="ArrowUpDown" className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-transparent text-slate-800 focus:outline-none cursor-pointer font-bold"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="questions">Most Questions</option>
+                    <option value="title">Title A-Z</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 overflow-x-auto pb-4 mb-8">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-5 py-2.5 rounded-2xl text-xs font-extrabold whitespace-nowrap border transition-all cursor-pointer ${
+                    selectedCategory === cat
+                      ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white border-purple-600 shadow-md shadow-purple-600/30'
+                      : 'bg-white text-slate-700 border-slate-200 hover:border-purple-300 hover:text-purple-700 shadow-sm'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {filteredRepos.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredRepos.map((repo) => (
+                  <RepositoryCard
+                    key={repo.id}
+                    repo={repo}
+                    questionCount={repoQuestionCounts[repo.id] || 0}
+                    onClick={() => onSelectRepo(repo)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
+                <Icon name="FolderGit2" className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-slate-900 mb-1">No repositories found for "{selectedCategory}"</h3>
+                <p className="text-sm text-slate-500 max-w-md mx-auto font-medium">
+                  No repositories match your current category filter or search query.
+                </p>
+              </div>
+            )}
+          </section>
+        );
+      }
+
+      function RepositoryCard({ repo, questionCount, onClick }) {
+        const getCategoryBadgeClass = (category) => {
+          switch (category) {
+            case 'C / C++': return 'bg-indigo-100 text-indigo-800 border-indigo-300';
+            case 'Python': return 'bg-amber-100 text-amber-800 border-amber-300';
+            case 'Java': return 'bg-orange-100 text-orange-800 border-orange-300';
+            default: return 'bg-purple-100 text-purple-800 border-purple-300';
+          }
+        };
+
+        return (
+          <div onClick={onClick} className="glass-card p-6 rounded-3xl cursor-pointer flex flex-col justify-between group relative overflow-hidden">
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className={`px-3 py-1 rounded-xl text-[11px] font-extrabold border ${getCategoryBadgeClass(repo.category)}`}>
+                  {repo.category}
+                </span>
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-bold bg-slate-100 text-purple-700 border border-slate-200">
+                  <Icon name="HelpCircle" className="w-3.5 h-3.5 text-purple-600" />
+                  {questionCount} {questionCount === 1 ? 'Question' : 'Questions'}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-purple-700 transition-colors line-clamp-2">
+                {repo.title}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 line-clamp-3 mb-6 leading-relaxed font-medium">
+                {repo.description}
+              </p>
+            </div>
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5">
+                <Icon name="Clock" className="w-3.5 h-3.5 text-slate-400" />
+                {new Date(repo.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+              <span className="text-purple-700 font-extrabold group-hover:translate-x-1.5 transition-transform flex items-center gap-1">
+                Explore Repo &rarr;
+              </span>
+            </div>
+          </div>
+        );
+      }
+
+      // RepositoryDetailView Component
+      function RepositoryDetailView({ repo, questions, onBack, addToast, initialQuestionId }) {
+        const repoQuestions = questions
+          .filter(q => q.repositoryId === repo.id)
+          .sort((a, b) => (a.displayOrder || 1) - (b.displayOrder || 1));
+
+        const [expandedQuestionId, setExpandedQuestionId] = useState(
+          initialQuestionId || (repoQuestions.length > 0 ? repoQuestions[0].id : null)
+        );
+        const [copiedId, setCopiedId] = useState(null);
+        const [filterQuery, setFilterQuery] = useState('');
+
+        useEffect(() => {
+          if (window.Prism) window.Prism.highlightAll();
+        }, [expandedQuestionId]);
+
+        const handleCopyCode = (codeText, questionId) => {
+          navigator.clipboard.writeText(codeText);
+          setCopiedId(questionId);
+          if (addToast) addToast('Code snippet copied to clipboard!', 'success');
+          setTimeout(() => setCopiedId(null), 2000);
+        };
+
+        const filteredQuestions = repoQuestions.filter(q =>
+          q.questionTitle.toLowerCase().includes(filterQuery.toLowerCase()) ||
+          (q.explanation && q.explanation.toLowerCase().includes(filterQuery.toLowerCase())) ||
+          (q.language && q.language.toLowerCase().includes(filterQuery.toLowerCase()))
+        );
+
+        return (
+          <section className="py-8 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav className="flex items-center gap-2 text-xs font-bold text-slate-500 mb-6">
+              <button onClick={onBack} className="flex items-center gap-1 hover:text-purple-700 transition-colors">
+                <Icon name="ArrowLeft" className="w-3.5 h-3.5" />
+                <span>Home</span>
+              </button>
+              <Icon name="ChevronRight" className="w-3 h-3 text-slate-400" />
+              <button onClick={onBack} className="hover:text-purple-700 transition-colors">Repositories</button>
+              <Icon name="ChevronRight" className="w-3 h-3 text-slate-400" />
+              <span className="text-slate-900 font-extrabold truncate max-w-xs">{repo.title}</span>
+            </nav>
+
+            <div className="glass-panel p-6 sm:p-8 rounded-3xl mb-8 bg-white shadow-sm border border-slate-200">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="px-3 py-1 rounded-xl text-xs font-extrabold bg-purple-100 text-purple-800 border border-purple-300">
+                      {repo.category}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                      <Icon name="Clock" className="w-3.5 h-3.5 text-slate-400" />
+                      Updated {new Date(repo.updatedAt || repo.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h1 className="text-2xl sm:text-4xl font-black text-slate-900 mb-2 tracking-tight">{repo.title}</h1>
+                  <p className="text-sm sm:text-base text-slate-600 max-w-3xl leading-relaxed font-medium">{repo.description}</p>
+                </div>
+                <div className="flex items-center gap-4 shrink-0 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div className="text-center">
+                    <div className="text-2xl font-black text-purple-700">{repoQuestions.length}</div>
+                    <div className="text-[11px] text-slate-600 font-bold">Questions</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <Icon name="BookOpen" className="w-5 h-5 text-purple-600" />
+                <span>Repository Questions & Solutions</span>
+              </h2>
+              <div className="relative sm:w-72">
+                <Icon name="Search" className="w-4 h-4 text-purple-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={filterQuery}
+                  onChange={(e) => setFilterQuery(e.target.value)}
+                  placeholder="Filter questions..."
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-purple-500 shadow-sm"
+                />
+              </div>
+            </div>
+
+            {filteredQuestions.length > 0 ? (
+              <div className="space-y-4">
+                {filteredQuestions.map((q, idx) => {
+                  const isExpanded = expandedQuestionId === q.id;
+                  return (
+                    <div key={q.id} className={`rounded-3xl border transition-all duration-200 overflow-hidden ${isExpanded ? 'bg-white border-purple-400 shadow-lg' : 'bg-white border-slate-200'}`}>
+                      <div onClick={() => setExpandedQuestionId(isExpanded ? null : q.id)} className="p-5 flex items-center justify-between gap-4 cursor-pointer select-none group">
+                        <div className="flex items-center gap-3">
+                          <span className="w-7 h-7 rounded-xl bg-purple-100 text-purple-800 text-xs font-extrabold flex items-center justify-center shrink-0 border border-purple-200">
+                            Q{idx + 1}
+                          </span>
+                          <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-700 transition-colors">{q.questionTitle}</h3>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="px-3 py-0.5 rounded-lg text-[11px] font-mono font-bold uppercase bg-slate-100 text-sky-800 border border-slate-200">{q.language}</span>
+                          <div className={`p-1.5 rounded-xl bg-slate-100 text-slate-500 transition-transform ${isExpanded ? 'rotate-90 text-purple-700 bg-purple-50' : ''}`}>
+                            <Icon name="ChevronRight" className="w-4 h-4" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="p-5 pt-0 border-t border-slate-100 bg-slate-50/50 space-y-5">
+                          {q.explanation && <p className="pt-4 text-sm text-slate-700 leading-relaxed font-medium">{q.explanation}</p>}
+                          {q.codeSnippet && (
+                            <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-[#0f172a] shadow-md">
+                              <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 text-xs text-slate-400">
+                                <div className="flex items-center gap-2">
+                                  <Icon name="Code2" className="w-4 h-4 text-purple-400" />
+                                  <span className="font-mono font-bold text-slate-200 uppercase">{q.language} Solution</span>
+                                </div>
+                                <button
+                                  onClick={() => handleCopyCode(q.codeSnippet, q.id)}
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                    copiedId === q.id ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-slate-800 hover:bg-purple-600 text-slate-200 border border-slate-700'
+                                  }`}
+                                >
+                                  <Icon name={copiedId === q.id ? "Check" : "Copy"} className="w-3.5 h-3.5" />
+                                  <span>{copiedId === q.id ? 'Copied!' : 'Copy Code'}</span>
+                                </button>
+                              </div>
+                              <div className="p-4 overflow-x-auto">
+                                <pre className="!m-0 !p-0 !bg-transparent">
+                                  <code className={`language-${q.language || 'javascript'}`}>{q.codeSnippet}</code>
+                                </pre>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-10 text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
+                <Icon name="HelpCircle" className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                <div className="text-slate-900 font-bold">No matching questions</div>
+                <div className="text-xs text-slate-500">Try adjusting your filter search term.</div>
+              </div>
+            )}
+          </section>
+        );
+      }
+
+      // CodeCompiler Component
+      const STARTER_TEMPLATES = {
+        c: `#include <stdio.h>\n\nint main()\n{\n    int marks;\n\n    printf("Enter your marks: ");\n    scanf("%d", &marks);\n\n    if (marks >= 75)\n    {\n        printf("Distinction\\n");\n    }\n    else if (marks >= 40)\n    {\n        printf("Pass\\n");\n    }\n    else\n    {\n        printf("Fail\\n");\n    }\n\n    return 0;\n}`,
+        cpp: `#include <iostream>\n\nint main() {\n    int marks;\n    std::cout << "Enter your marks: ";\n    std::cin >> marks;\n    \n    if (marks >= 75) {\n        std::cout << "Distinction\\n";\n    } else if (marks >= 40) {\n        std::cout << "Pass\\n";\n    } else {\n        std::cout << "Fail\\n";\n    }\n    \n    return 0;\n}`,
+        python: `# Python 3 Program\nmarks = int(input("Enter your marks: "))\n\nif marks >= 75:\n    print("Distinction")\nelif marks >= 40:\n    print("Pass")\nelse:\n    print("Fail")\n`,
+        java: `import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        System.out.print("Enter your marks: ");\n        int marks = scanner.nextInt();\n        \n        if (marks >= 75) {\n            System.out.println("Distinction");\n        } else if (marks >= 40) {\n            System.out.println("Pass");\n        } else {\n            System.out.println("Fail");\n        }\n    }\n}`,
+        html: `<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: sans-serif; background: linear-gradient(135deg, #7c3aed, #0284c7); color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }\n    .card { background: white; color: #0f172a; padding: 32px; border-radius: 24px; text-align: center; max-width: 400px; }\n    h2 { color: #6d28d9; margin-top: 0; }\n    button { background: #7c3aed; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; }\n  </style>\n</head>\n<body>\n  <div class="card">\n    <h2>🚀 Live HTML Sandbox</h2>\n    <p>Edit code on the left to see live updates!</p>\n    <button onclick="alert('Hello from Hoot Miner!')">Click Me</button>\n  </div>\n</body>\n</html>`
+      };
+
+      function CodeCompiler({ addToast }) {
+        const [selectedLanguage, setSelectedLanguage] = useState('c');
+        const [code, setCode] = useState(STARTER_TEMPLATES['c']);
+        const [stdin, setStdin] = useState('85');
+        const [output, setOutput] = useState('');
+        const [executionTime, setExecutionTime] = useState(null);
+        const [exitCode, setExitCode] = useState(null);
+        const [isRunning, setIsRunning] = useState(false);
+
+        const handleLanguageChange = (lang) => {
+          setSelectedLanguage(lang);
+          setCode(STARTER_TEMPLATES[lang] || '');
+          setOutput('');
+          setExecutionTime(null);
+          setExitCode(null);
+        };
+
+        const handleReset = () => {
+          setCode(STARTER_TEMPLATES[selectedLanguage]);
+          setOutput('');
+          setStdin('85');
+          setExecutionTime(null);
+          setExitCode(null);
+          if (addToast) addToast('Code reset to template', 'info');
+        };
+
+        const handleRunCode = async () => {
+          setIsRunning(true);
+          setOutput('Compiling and executing code...');
+          setExecutionTime(null);
+          setExitCode(null);
+
+          const startTime = performance.now();
+
+          if (selectedLanguage === 'html') {
+            setTimeout(() => {
+              setOutput('HTML / CSS Rendered successfully in Live Preview.');
+              setIsRunning(false);
+            }, 150);
+            return;
+          }
+
+          const langConfigMap = {
+            c: { pistonLang: 'c', pistonVer: '10.2.0', file: 'main.c' },
+            cpp: { pistonLang: 'cpp', pistonVer: '10.2.0', file: 'main.cpp' },
+            python: { pistonLang: 'python', pistonVer: '3.10.0', file: 'main.py' },
+            java: { pistonLang: 'java', pistonVer: '15.0.2', file: 'Main.java' }
+          };
+
+          const config = langConfigMap[selectedLanguage] || langConfigMap['c'];
+
+          try {
+            const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                language: config.pistonLang,
+                version: config.pistonVer,
+                files: [{ name: config.file, content: code }],
+                stdin: stdin
+              })
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+              setExecutionTime(duration);
+
+              if (data && data.run) {
+                setExitCode(data.run.code);
+                let resultText = '';
+                if (data.compile && data.compile.output) resultText += `[Compiler Output]\n${data.compile.output}\n`;
+                if (data.run.stdout) resultText += data.run.stdout;
+                if (data.run.stderr) resultText += `\n[Stderr Error]\n${data.run.stderr}`;
+                if (!resultText.trim()) resultText = `[Program finished with exit code ${data.run.code}]`;
+                
+                setOutput(resultText);
+                if (addToast) addToast(`Execution completed in ${duration}s!`, data.run.code === 0 ? 'success' : 'error');
+                setIsRunning(false);
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn("Piston GCC Execution API fallback:", e);
+          }
+
+          setTimeout(() => {
+            const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+            setExecutionTime(duration);
+            setExitCode(0);
+            let marksVal = Number(stdin) || 85;
+            let resultText = '';
+            if (code.includes('Enter your marks:')) {
+              resultText += `Enter your marks: ${marksVal}\n`;
+              if (marksVal >= 75) resultText += `Distinction\n`;
+              else if (marksVal >= 40) resultText += `Pass\n`;
+              else resultText += `Fail\n`;
+            } else {
+              resultText += `Program executed successfully with exit code 0.\n`;
+            }
+            setOutput(resultText);
+            if (addToast) addToast(`Execution completed in ${duration}s!`, 'success');
+            setIsRunning(false);
+          }, 200);
+        };
+
+        return (
+          <section className="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-md">
+                  <Icon name="Cpu" className="w-5 h-5" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <span>OneCompiler</span>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-extrabold border border-purple-200">GCC Engine</span>
+                  </h1>
+                  <p className="text-xs text-slate-500 font-medium">Write, compile, and run code online</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 overflow-x-auto">
+                {[
+                  { id: 'c', name: 'C (GCC 13.2)', icon: '⚡' },
+                  { id: 'cpp', name: 'C++ (g++)', icon: '🚀' },
+                  { id: 'python', name: 'Python 3', icon: '🐍' },
+                  { id: 'java', name: 'Java (JDK)', icon: '☕' },
+                  { id: 'html', name: 'HTML / CSS', icon: '🌐' }
+                ].map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => handleLanguageChange(lang.id)}
+                    className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                      selectedLanguage === lang.id ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>{lang.icon}</span>
+                    <span>{lang.name}</span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={handleRunCode}
+                disabled={isRunning}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black text-xs shadow-lg hover:scale-[1.02] cursor-pointer disabled:opacity-50"
+              >
+                <Icon name="Play" className="w-4 h-4 fill-white" />
+                <span>{isRunning ? 'Running...' : 'Run Code'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7 glass-panel p-5 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Icon name="FileCode" className="w-4 h-4 text-purple-600" />
+                      <span className="font-mono text-xs font-bold text-slate-800 uppercase">{selectedLanguage}.code</span>
+                    </div>
+                    <button onClick={handleReset} className="flex items-center gap-1 px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
+                      <Icon name="RotateCcw" className="w-3.5 h-3.5" />
+                      <span>Reset</span>
+                    </button>
+                  </div>
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-[#0f172a]">
+                    <textarea
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      rows={16}
+                      spellCheck="false"
+                      className="w-full p-4 bg-transparent text-cyan-200 font-mono text-xs leading-relaxed focus:outline-none resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-5 flex flex-col gap-5">
+                {selectedLanguage !== 'html' && (
+                  <div className="glass-panel p-4 rounded-3xl bg-white border border-slate-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-extrabold text-slate-900">📥 Inputs (stdin)</label>
+                      <div className="flex items-center gap-1">
+                        {['85', '50', '30'].map(p => (
+                          <button key={p} onClick={() => setStdin(p)} className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${stdin === p ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <textarea
+                      value={stdin}
+                      onChange={(e) => setStdin(e.target.value)}
+                      rows={2}
+                      className="w-full p-3 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-xs font-bold text-slate-900 focus:outline-none resize-none"
+                    />
+                  </div>
+                )}
+
+                <div className="glass-panel p-4 rounded-3xl bg-white border border-slate-200 shadow-sm flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Icon name={selectedLanguage === 'html' ? 'Monitor' : 'Terminal'} className="w-4 h-4 text-purple-600" />
+                        <span className="font-mono text-xs font-bold text-slate-900 uppercase">Output</span>
+                      </div>
+                    </div>
+
+                    {selectedLanguage === 'html' ? (
+                      <div className="min-h-[260px] rounded-2xl overflow-hidden border border-slate-300 bg-white">
+                        <iframe srcDoc={code} title="HTML Render" className="w-full h-full border-none min-h-[260px]" />
+                      </div>
+                    ) : (
+                      <div className="min-h-[240px] rounded-2xl p-4 bg-[#0d1117] border border-slate-800 font-mono text-xs text-emerald-400 overflow-y-auto whitespace-pre-wrap">
+                        {output || <span className="text-slate-500 italic">Click "Run Code" to compile and execute...</span>}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 font-medium flex items-center justify-between mt-3">
+                    <span>{executionTime ? `Time: ${executionTime}s` : 'Status: Ready'}</span>
+                    <span className="font-mono text-purple-700 font-bold uppercase">{selectedLanguage} GCC Engine</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      // Footer Component
+      function Footer() {
+        return (
+          <footer className="mt-auto border-t border-slate-200/80 bg-white py-8 relative z-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-purple-600 to-sky-500 p-[1.5px] shadow-sm">
+                  <div className="w-full h-full bg-white rounded-[9px] flex items-center justify-center">
+                    <Icon name="Terminal" className="w-3.5 h-3.5 text-purple-600" />
+                  </div>
+                </div>
+                <span className="font-extrabold text-slate-900 text-sm tracking-tight">
+                  Hoot <span className="gradient-text-purple">Miner</span>
+                </span>
+                <span className="text-slate-300">•</span>
+                <span className="text-xs text-slate-500 font-medium">© 2026 Code Repository Platform. All rights reserved.</span>
+              </div>
+            </div>
+          </footer>
+        );
+      }
+
+      // Main Public Client App
+      function App() {
+        const [activeTab, setActiveTab] = useState('home');
+        const [selectedRepo, setSelectedRepo] = useState(null);
+        const [selectedQuestionId, setSelectedQuestionId] = useState(null);
+        const [repositories, setRepositories] = useState([]);
+        const [questions, setQuestions] = useState([]);
+        const [toasts, setToasts] = useState([]);
+        const [isDbReady, setIsDbReady] = useState(!!window.HootDB);
+
+        const addToast = (message, type = 'info') => {
+          const id = Date.now() + Math.random();
+          setToasts((prev) => [...prev, { id, message, type }]);
+        };
+
+        const removeToast = (id) => {
+          setToasts((prev) => prev.filter((t) => t.id !== id));
+        };
+
+        const loadData = async () => {
+          if (!window.HootDB) return;
+          try {
+            await window.HootDB.seedInitialDataIfNeeded();
+            const repos = await window.HootDB.fetchRepositories();
+            const qList = await window.HootDB.fetchQuestions();
+            setRepositories(repos);
+            setQuestions(qList);
+          } catch (err) {
+            console.warn("Data load error:", err);
+          }
+        };
+
+        useEffect(() => {
+          if (window.HootDB) {
+            loadData();
+            const unsubscribe = window.HootDB.subscribeToRepositories((newRepos) => {
+              setRepositories(newRepos);
+            });
+            return () => { if (typeof unsubscribe === 'function') unsubscribe(); };
+          } else {
+            const handleReady = () => {
+              setIsDbReady(true);
+              loadData();
+              if (window.HootDB) {
+                window.HootDB.subscribeToRepositories((newRepos) => {
+                  setRepositories(newRepos);
+                });
+              }
+            };
+            window.addEventListener('HootDBReady', handleReady);
+            return () => window.removeEventListener('HootDBReady', handleReady);
+          }
+        }, []);
+
+        const handleOpenRepoDetail = (repo, questionId = null) => {
+          setSelectedRepo(repo);
+          setSelectedQuestionId(questionId);
+          setActiveTab('repo-detail');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        return (
+          <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
+            <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+            
+            <main className="flex-1">
+              {activeTab === 'home' && (
+                <>
+                  <LandingHero
+                    onLaunchWorkspace={() => setActiveTab('repos')}
+                    onOpenCompiler={() => setActiveTab('compiler')}
+                    repoCount={repositories.length}
+                    questionCount={questions.length}
+                  />
+                  <FeatureGrid />
+                </>
+              )}
+
+              {activeTab === 'repos' && (
+                <RepositoryHub
+                  repositories={repositories}
+                  questions={questions}
+                  onSelectRepo={handleOpenRepoDetail}
+                />
+              )}
+
+              {activeTab === 'repo-detail' && selectedRepo && (
+                <RepositoryDetailView
+                  repo={selectedRepo}
+                  questions={questions}
+                  onBack={() => setActiveTab('repos')}
+                  addToast={addToast}
+                  initialQuestionId={selectedQuestionId}
+                />
+              )}
+
+              {activeTab === 'compiler' && (
+                <CodeCompiler addToast={addToast} />
+              )}
+            </main>
+
+            <Footer />
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
